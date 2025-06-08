@@ -49,3 +49,12 @@ module "rds" {
   instance_class    = "db.t3.micro"
   allocated_storage = 20
 }
+
+################################################
+# S3
+################################################
+module "s3" {
+  source       = "../../modules/s3"
+  environment  = var.environment
+  project_name = var.project_name
+}
