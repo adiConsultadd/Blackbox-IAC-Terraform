@@ -13,7 +13,7 @@ variable "environment" {
 variable "project_name" {
   description = "Project name"
   type        = string
-  default     = "sourcing"
+  default     = "blackbox"
 }
 
 variable "vpc_id" {
