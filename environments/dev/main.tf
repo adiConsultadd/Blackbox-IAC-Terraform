@@ -62,19 +62,19 @@ module "s3" {
 ################################################
 # CloudFront
 ################################################
-module "cloudfront" {
-  source         = "../../modules/cloudfront"
-  environment    = var.environment
-  project_name   = var.project_name
-  s3_bucket_name = module.s3.bucket_name
-}
+# module "cloudfront" {
+#   source         = "../../modules/cloudfront"
+#   environment    = var.environment
+#   project_name   = var.project_name
+#   s3_bucket_name = module.s3.bucket_name
+# }
 
 ################################################
 # EventBridge
 ################################################
-module "eventbridge" {
-  source             = "../../modules/eventbridge"
-  environment        = var.environment
-  project_name       = var.project_name
-  lambda_arn_to_trigger = module.lambda.lambda_1_arn
-}
+# module "eventbridge" {
+#   source             = "../../modules/eventbridge"
+#   environment        = var.environment
+#   project_name       = var.project_name
+#   lambda_arn_to_trigger = module.lambda.lambda_1_arn
+# }
