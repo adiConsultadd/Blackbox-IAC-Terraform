@@ -1,4 +1,4 @@
- resource "aws_s3_bucket" "mys3bucket" {
+resource "aws_s3_bucket" "mys3bucket" {
   bucket = "${var.project_name}-${var.environment}-rfp-files"
   # acl    = "private"
 
