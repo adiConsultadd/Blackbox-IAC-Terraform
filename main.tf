@@ -17,7 +17,7 @@ data "aws_region" "current" {}
 # IAM
 ################################################
 module "iam" {
-  source       = "../../modules/iam"
+  source       = "./modules/iam"
   environment  = var.environment
   project_name = var.project_name
 }
@@ -26,7 +26,7 @@ module "iam" {
 # Lambda
 ################################################
 module "lambda" {
-  source          = "../../modules/lambda"
+  source          = "./modules/lambda"
   environment     = var.environment
   project_name    = var.project_name
   vpc_id          = var.vpc_id
@@ -38,7 +38,7 @@ module "lambda" {
 # # RDS
 # ################################################
 # module "rds" {
-#   source            = "../../modules/rds"
+#   source            = "./modules/rds"
 #   environment       = var.environment
 #   project_name      = var.project_name
 #   vpc_id            = var.vpc_id
@@ -54,7 +54,7 @@ module "lambda" {
 # S3
 ################################################
 module "s3" {
-  source       = "../../modules/s3"
+  source       = "./modules/s3"
   environment  = var.environment
   project_name = var.project_name
 }
@@ -63,7 +63,7 @@ module "s3" {
 # CloudFront
 ################################################
 # module "cloudfront" {
-#   source         = "../../modules/cloudfront"
+#   source         = "./modules/cloudfront"
 #   environment    = var.environment
 #   project_name   = var.project_name
 #   s3_bucket_name = module.s3.bucket_name
@@ -73,7 +73,7 @@ module "s3" {
 # EventBridge
 ################################################
 # module "eventbridge" {
-#   source             = "../../modules/eventbridge"
+#   source             = "./modules/eventbridge"
 #   environment        = var.environment
 #   project_name       = var.project_name
 #   lambda_arn_to_trigger = module.lambda.lambda_1_arn
