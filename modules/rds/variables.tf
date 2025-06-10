@@ -8,39 +8,32 @@ variable "project_name" {
   description = "Project name"
 }
 
-variable "vpc_id" {
-  type        = string
-  description = "VPC ID"
-  default     = ""
-}
-
-variable "private_subnet_ids" {
-  type        = list(string)
-  description = "List of private subnet IDs"
-  default     = []
-}
-
 variable "db_username" {
   type        = string
-  default     = "postgres"
+  description = "RDS DB username"
 }
 
 variable "db_password" {
   type        = string
-  default     = "Password123!"
+  description = "RDS DB password"
 }
 
 variable "engine" {
   type        = string
-  default     = "postgres"
+  description = "RDS engine (e.g. postgres, mysql, etc.)"
 }
 
 variable "instance_class" {
   type        = string
-  default     = "db.t3.micro"
+  description = "RDS instance class (e.g. db.t3.micro)"
 }
 
 variable "allocated_storage" {
   type        = number
-  default     = 20
+  description = "Allocated storage in GB"
+}
+
+variable "skip_final_snapshot" {
+  type        = bool
+  description = "Whether to skip the final DB snapshot"
 }

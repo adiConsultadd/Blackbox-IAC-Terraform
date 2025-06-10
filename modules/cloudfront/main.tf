@@ -4,22 +4,18 @@ resource "aws_cloudfront_distribution" "mycdn" {
     origin_id   = "S3-${var.s3_bucket_name}"
   }
 
-  enabled             = true
-  default_root_object = "index.html"
+  enabled             = var.enabled
+  default_root_object = var.default_root_object
 
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD"]
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "S3-${var.s3_bucket_name}"
 
-    viewer_protocol_policy = "allow-all"
+    viewer_protocol_policy = var.viewer_protocol_policy
   }
 
-  # For dev usage, we’ll allow HTTP. 
-  # In real usage, you might want to force HTTPS only.
-
-  # Price class
-  price_class = "PriceClass_100"
+  price_class = var.price_class
 
   restrictions {
     geo_restriction {

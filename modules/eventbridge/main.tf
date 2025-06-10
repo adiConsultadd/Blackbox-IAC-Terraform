@@ -1,6 +1,6 @@
 resource "aws_cloudwatch_event_rule" "cron_daily" {
   name                = "${var.project_name}-${var.environment}-daily-trigger"
-  schedule_expression = "cron(0 8 * * ? *)"
+  schedule_expression = var.schedule_expression
  
   tags = {
     Environment = var.environment
@@ -14,7 +14,6 @@ resource "aws_cloudwatch_event_target" "cron_daily_target" {
   target_id = "lambda-1-daily"
 }
 
-# Grant EventBridge permission to invoke the Lambda
 resource "aws_lambda_permission" "allow_eventbridge_to_invoke" {
   statement_id  = "AllowExecutionFromEventBridge"
   action        = "lambda:InvokeFunction"

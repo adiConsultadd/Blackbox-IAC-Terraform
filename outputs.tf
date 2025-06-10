@@ -43,7 +43,7 @@ output "lambda_3_name" {
 #   value       = module.rds.db_identifier
 # }
 
- output "s3_bucket_name" {
-  description = "Name of the RFP S3 bucket"
-  value       = module.s3.bucket_name
-}
+#  output "s3_bucket_name" {
+#   description = "Name of the RFP S3 bucket"
+#   value       = module.s3.bucket_name
+# }
