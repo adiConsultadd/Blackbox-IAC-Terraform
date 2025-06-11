@@ -10,32 +10,32 @@ module "s3" {
 ###############################################################################
 # 2. Lambdas (three functions)
 ###############################################################################
-locals {
-  lambdas = {
-    lambda_1 = {
-      source_dir = "${path.module}/lambda-code/lambda-1"
-      env        = { EXAMPLE_ENV_VAR = "HelloWorld-lambda1" }
-    }
-    lambda_2 = {
-      source_dir = "${path.module}/lambda-code/lambda-2"
-      env        = { EXAMPLE_ENV_VAR = "HelloWorld-lambda2" }
-    }
-    lambda_3 = {
-      source_dir = "${path.module}/lambda-code/lambda-3"
-      env        = { EXAMPLE_ENV_VAR = "HelloWorld-lambda3" }
-    }
-  }
-}
+# locals {
+#   lambdas = {
+#     lambda_1 = {
+#       source_dir = "${path.module}/lambda-code/lambda-1"
+#       env        = { EXAMPLE_ENV_VAR = "HelloWorld-lambda1" }
+#     }
+#     lambda_2 = {
+#       source_dir = "${path.module}/lambda-code/lambda-2"
+#       env        = { EXAMPLE_ENV_VAR = "HelloWorld-lambda2" }
+#     }
+#     lambda_3 = {
+#       source_dir = "${path.module}/lambda-code/lambda-3"
+#       env        = { EXAMPLE_ENV_VAR = "HelloWorld-lambda3" }
+#     }
+#   }
+# }
 
-module "lambda" {
-  source = "../../base-infra/lambda"
-  for_each = local.lambdas
+# module "lambda" {
+#   source = "../../base-infra/lambda"
+#   for_each = local.lambdas
 
-  function_name         = "${var.project_name}-${var.environment}-${each.key}"
-  source_dir            = each.value.source_dir
-  lambda_role_arn       = var.lambda_role_arn
-  environment_variables = each.value.env
-}
+#   function_name         = "${var.project_name}-${var.environment}-${each.key}"
+#   source_dir            = each.value.source_dir
+#   lambda_role_arn       = var.lambda_role_arn
+#   environment_variables = each.value.env
+# }
 
 ###############################################################################
 # 3. EventBridge – triggers lambda‑1 every day (example)
