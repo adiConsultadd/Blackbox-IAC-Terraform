@@ -8,3 +8,7 @@ variable "project_name" {
   description = "Project name"
 }
  
+variable "bucket_suffix" {
+  type = string
+  description = "Suffix to be attached to the S3-bucket"
+}

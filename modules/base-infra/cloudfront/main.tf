@@ -1,4 +1,4 @@
-resource "aws_cloudfront_distribution" "mycdn" {
+resource "aws_cloudfront_distribution" "this" {
   origin {
     domain_name = "${var.s3_bucket_name}.s3.amazonaws.com"
     origin_id   = "S3-${var.s3_bucket_name}"
@@ -13,6 +13,13 @@ resource "aws_cloudfront_distribution" "mycdn" {
     target_origin_id = "S3-${var.s3_bucket_name}"
 
     viewer_protocol_policy = var.viewer_protocol_policy
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
   }
 
   price_class = var.price_class

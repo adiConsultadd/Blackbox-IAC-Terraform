@@ -1,9 +1,9 @@
 output "distribution_id" {
   description = "CloudFront distribution ID"
-  value       = aws_cloudfront_distribution.mycdn.id
+  value       = aws_cloudfront_distribution.this.id
 }
 
 output "distribution_domain_name" {
   description = "CloudFront distribution domain name"
-  value       = aws_cloudfront_distribution.mycdn.domain_name
+  value       = aws_cloudfront_distribution.this.domain_name
 }

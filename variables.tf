@@ -2,14 +2,6 @@ variable "aws_region"   { type = string }
 variable "environment"  { type = string }
 variable "project_name" { type = string }
 
-# ---- RDS shared with the “sourcing” feature ----------------
-variable "db_username"         { type = string }
-variable "db_password"         { type = string }
-variable "db_engine"           { type = string }
-variable "db_instance_class"   { type = string }
-variable "db_allocated_storage"{ type = number }
-variable "skip_final_snapshot" { type = bool }
-
 # ---- CloudFront -------------------------------------------
 variable "cloudfront_price_class"   { type = string }
 variable "viewer_protocol_policy"   { type = string }

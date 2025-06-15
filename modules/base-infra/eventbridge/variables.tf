@@ -17,3 +17,7 @@ variable "schedule_expression" {
   type        = string
   description = "Schedule expression (e.g. cron(0 8 * * ? *))"
 }
+
+variable "suffix"{
+  type        = string
+}
