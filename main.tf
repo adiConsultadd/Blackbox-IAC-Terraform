@@ -1,7 +1,7 @@
 #############################################################
-# 1.  Sourcing Feature 
+# 1.  Sourcing Service 
 #############################################################
-module "feature_sourcing" {
+module "sourcing" {
   source       = "./modules/services/sourcing"
 
   environment  = var.environment
