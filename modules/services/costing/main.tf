@@ -108,18 +108,33 @@ module "lambda" {
 }
 
 ###############################################################################
-# 4. State Machine
+# 4. State Machine - 1
 ###############################################################################
-module "costing_state_machine" {
+module "costing_state_machine_1" {
   source = "../../base-infra/step-function"
 
   project_name       = var.project_name
   environment        = var.environment
   state_machine_name = "costing-workflow-1"
-  definition         = templatefile("${path.module}/state-machine.tftpl", {
+  definition         = templatefile("${path.module}/state-machine-1.tftpl", {
     rfp_infrastructure_lambda_arn  = module.lambda["costing-rfp-infrastructure"].lambda_arn
     rfp_license_lambda_arn         = module.lambda["costing-rfp-license"].lambda_arn
     hourly_wages_lambda_arn        = module.lambda["costing-hourly-wages"].lambda_arn
     hourly_wages_result_lambda_arn = module.lambda["costing-hourly-wages-result"].lambda_arn
   })
+}
+
+###############################################################################
+# 5. State Machine - 2
+###############################################################################
+module "costing_state_machine_2" {
+  source = "../../base-infra/step-function"
+
+  project_name       = var.project_name
+  environment        = var.environment
+  state_machine_name = "costing-workflow-2"
+  definition         = templatefile("${path.module}/state-machine-2.tftpl", {
+  rfp_cost_image_extractor_lambda_arn= module.lambda["costing-rfp-cost-image-extractor"].lambda_arn
+  rfp_cost_image_calculation_lambda_arn = module.lambda["costing-rfp-cost-image-calculation"].lambda_arn
+ })
 }

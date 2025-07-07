@@ -48,7 +48,3 @@ output "costing_lambda_arns" {
   value       = module.costing.lambda_arns
 }
 
-output "costing_state_machine_arn" {
-  description = "ARN of the costing service's state machine"
-  value       = module.costing.state_machine_arn
-}

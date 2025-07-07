@@ -1,0 +1,50 @@
+{
+  "Comment": "A sequential state machine to process cost images.",
+  "StartAt": "ExtractCostImage",
+  "States": {
+    "ExtractCostImage": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${rfp_cost_image_extractor_lambda_arn}",
+        "Payload.$": "$"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 0,
+          "BackoffRate": 1
+        }
+      ],
+      "Next": "CalculateCostFromImage"
+    },
+    "CalculateCostFromImage": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${rfp_cost_image_calculation_lambda_arn}",
+        "Payload.$": "$"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 0,
+          "BackoffRate": 1
+        }
+      ],
+      "End": true
+    }
+  }
+}
