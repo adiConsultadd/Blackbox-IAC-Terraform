@@ -50,3 +50,19 @@ variable "lambda_layers" {
   }))
   default = {}
 }
+
+# ---- EC2 --------------------------------------------------
+variable "ec2_instance_type" { 
+  type = string 
+}
+variable "ec2_ami_id" { 
+  type = string 
+}
+variable "ec2_key_name" {
+  type        = string
+  description = "Key pair name for EC2 instance access"
+}
+variable "ssh_access_cidr" {
+  type        = string
+  description = "CIDR block for SSH access to the EC2 instance"
+}

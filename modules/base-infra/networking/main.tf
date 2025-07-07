@@ -178,3 +178,32 @@ resource "aws_security_group_rule" "allow_lambda_to_elasticache" {
   source_security_group_id = aws_security_group.lambda.id
   description              = "Allow Lambda to connect to ElastiCache"
 }
+
+resource "aws_security_group" "ec2" {
+  name        = "${var.project_name}-${var.environment}-ec2-sg"
+  description = "Allow SSH inbound traffic and all outbound"
+  vpc_id      = aws_vpc.this.id
+
+  # Allow SSH from a specified IP address or range
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.ssh_access_cidr]
+    description = "Allow SSH from trusted location"
+  }
+
+  # Allow all outbound traffic
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name        = "${var.project_name}-${var.environment}-ec2-sg"
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}

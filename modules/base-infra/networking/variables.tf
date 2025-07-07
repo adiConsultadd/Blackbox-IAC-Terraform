@@ -27,3 +27,9 @@ variable "availability_zones" {
   type        = list(string)
   description = "List of availability zones to deploy subnets into"
 }
+
+variable "ssh_access_cidr" {
+  type        = string
+  description = "The CIDR block allowed to SSH into the EC2 instance"
+  default     = "0.0.0.0/0" 
+}

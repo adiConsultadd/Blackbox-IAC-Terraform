@@ -60,7 +60,24 @@ module "ssm_parameters" {
 }
 
 #############################################################
-# 5.  Sourcing Service
+# 5. Shared EC2 Instance
+#############################################################
+module "ec2" {
+  source = "./modules/base-infra/ec2"
+
+  project_name      = var.project_name
+  environment       = var.environment
+  ami_id            = var.ec2_ami_id
+  instance_type     = var.ec2_instance_type
+  key_name          = var.ec2_key_name
+  
+  subnet_id = module.networking.private_subnet_ids[0]
+
+  security_group_id = module.networking.ec2_security_group_id
+}
+
+#############################################################
+# 6.  Sourcing Service
 #############################################################
 module "sourcing" {
   source = "./modules/services/sourcing"
@@ -85,7 +102,7 @@ module "sourcing" {
 }
 
 #############################################################
-# 6.  Drafting Service
+# 7.  Drafting Service
 #############################################################
 module "drafting" {
   source = "./modules/services/drafting"
@@ -100,7 +117,7 @@ module "drafting" {
 }
 
 #############################################################
-# 7.  Costing Service
+# 8.  Costing Service
 #############################################################
 module "costing" {
   source = "./modules/services/costing"
@@ -115,7 +132,7 @@ module "costing" {
 }
 
 #############################################################
-# 8. Lambda Layers
+# 9. Lambda Layers
 #############################################################
 module "lambda_layers" {
   source = "./modules/base-infra/layers"
