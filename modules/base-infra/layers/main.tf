@@ -1,3 +1,13 @@
+resource "null_resource" "pip_install" {
+  for_each = var.layers
+  triggers = {
+    requirements_hash = filemd5("${each.value.source_path}/requirements.txt")
+  }
+  provisioner "local-exec" {
+    command = "pip install -r ${each.value.source_path}/requirements.txt -t ${path.module}/build/${each.key}/python"
+  }
+}
+
 resource "aws_s3_bucket" "lambda_layers" {
   bucket = "${var.project_name}-${var.environment}-lambda-layers"
 }
@@ -5,8 +15,9 @@ resource "aws_s3_bucket" "lambda_layers" {
 data "archive_file" "layer_zips" {
   for_each    = var.layers
   type        = "zip"
-  source_dir  = each.value.source_path
+  source_dir  = "${path.module}/build/${each.key}"
   output_path = "${path.module}/build/${each.key}.zip"
+  depends_on = [null_resource.pip_install]
 }
 
 resource "aws_s3_object" "layer_objects" {
