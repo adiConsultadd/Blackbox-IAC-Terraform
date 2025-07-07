@@ -37,3 +37,8 @@ output "drafting_lambda_arns" {
   description = "ARNs of the Lambda functions in the drafting service"
   value       = module.drafting.lambda_arns
 }
+
+output "costing_lambda_arns" {
+  description = "ARNs of the Lambda functions in the costing service"
+  value       = module.costing.lambda_arns
+}
