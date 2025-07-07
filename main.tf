@@ -87,17 +87,17 @@ module "sourcing" {
 #############################################################
 # 6.  Drafting Service
 #############################################################
-# module "drafting" {
-#   source = "./modules/services/drafting"
+module "drafting" {
+  source = "./modules/services/drafting"
 
-#   # Global Vars
-#   environment  = var.environment
-#   project_name = var.project_name
+  # Global Vars
+  environment  = var.environment
+  project_name = var.project_name
 
-#   # Pass in shared infrastructure details
-#   private_subnet_ids       = module.networking.private_subnet_ids
-#   lambda_security_group_id = module.networking.lambda_security_group_id
-# }
+  # Pass in shared infrastructure details
+  private_subnet_ids       = module.networking.private_subnet_ids
+  lambda_security_group_id = module.networking.lambda_security_group_id
+}
 
 #############################################################
 # 7.  Costing Service

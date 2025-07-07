@@ -1,0 +1,47 @@
+{
+  "Comment": "A state machine for the drafting service that runs some tasks in parallel and others sequentially.",
+  "StartAt": "ProcessCompanyData",
+  "States": {
+    "ProcessCompanyData": {
+      "Type": "Task",
+      "Resource": "${company_data_lambda_arn}",
+      "Next": "ParallelTextProcessing"
+    },
+    "ParallelTextProcessing": {
+      "Type": "Parallel",
+      "Next": "GenerateTableOfContents",
+      "Branches": [
+        {
+          "StartAt": "ExtractText",
+          "States": {
+            "ExtractText": {
+              "Type": "Task",
+              "Resource": "${extract_text_lambda_arn}",
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "GenerateInitialSummary",
+          "States": {
+            "GenerateInitialSummary": {
+              "Type": "Task",
+              "Resource": "${summary_lambda_arn}",
+              "End": true
+            }
+          }
+        }
+      ]
+    },
+    "GenerateTableOfContents": {
+      "Type": "Task",
+      "Resource": "${table_of_content_lambda_arn}",
+      "Next": "FinalizeDraft"
+    },
+    "FinalizeDraft": {
+      "Type": "Task",
+      "Resource": "${content_regeneration_lambda_arn}",
+      "End": true
+    }
+  }
+}

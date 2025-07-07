@@ -104,3 +104,30 @@ module "lambda" {
   vpc_subnet_ids         = var.private_subnet_ids
   vpc_security_group_ids = [var.lambda_security_group_id]
 }
+
+###############################################################################
+# 4. State Machine Definition
+###############################################################################
+data "template_file" "sfn_definition" {
+  template = file("${path.module}/state-machine.tftpl")
+
+  vars = {
+    company_data_lambda_arn     = module.lambda["drafting-company-data"].lambda_arn
+    extract_text_lambda_arn     = module.lambda["drafting-extract-text"].lambda_arn
+    summary_lambda_arn          = module.lambda["drafting-summary"].lambda_arn
+    table_of_content_lambda_arn = module.lambda["drafting-table-of-content"].lambda_arn
+    content_regeneration_lambda_arn = module.lambda["drafting-content-regeneration"].lambda_arn
+  }
+}
+
+###############################################################################
+# 5. State Machine
+###############################################################################
+module "drafting_state_machine" {
+  source = "../../base-infra/step-function"
+
+  project_name       = var.project_name
+  environment        = var.environment
+  state_machine_name = "drafting-workflow"
+  definition         = data.template_file.sfn_definition.rendered
+}
