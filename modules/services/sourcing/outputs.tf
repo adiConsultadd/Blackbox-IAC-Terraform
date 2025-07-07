@@ -14,6 +14,6 @@ output "cloudfront_domain" {
 }
 
 output "eventbridge_rule_arn" {
-  description = "ARN of the scheduled EventBridge rule"
+  description = "ARN of the scheduled EventBridge rule for this service"
   value       = module.eventbridge.eventbridge_rule_arn
 }

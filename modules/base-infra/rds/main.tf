@@ -1,11 +1,24 @@
+resource "aws_db_subnet_group" "this" {
+  name       = "${var.project_name}-${var.environment}-sng"
+  subnet_ids = var.subnet_ids
+
+  tags = {
+    Name        = "${var.project_name}-${var.environment}-sng"
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}
+
 resource "aws_db_instance" "myrds" {
-  identifier          = "${var.project_name}-${var.environment}-db"
-  engine              = var.engine
-  instance_class      = var.instance_class
-  allocated_storage   = var.allocated_storage
-  username            = var.db_username
-  password            = var.db_password
-  skip_final_snapshot = var.skip_final_snapshot
+  identifier             = "${var.project_name}-${var.environment}-db"
+  engine                 = var.engine
+  instance_class         = var.instance_class
+  allocated_storage      = var.allocated_storage
+  username               = var.db_username
+  password               = var.db_password
+  skip_final_snapshot    = var.skip_final_snapshot
+  db_subnet_group_name   = aws_db_subnet_group.this.name
+  vpc_security_group_ids = var.vpc_security_group_ids
 
   tags = {
     Name        = "${var.project_name}-${var.environment}-db"

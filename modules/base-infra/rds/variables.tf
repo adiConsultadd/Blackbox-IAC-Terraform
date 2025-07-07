@@ -16,6 +16,7 @@ variable "db_username" {
 variable "db_password" {
   type        = string
   description = "RDS DB password"
+  sensitive   = true
 }
 
 variable "engine" {
@@ -36,4 +37,14 @@ variable "allocated_storage" {
 variable "skip_final_snapshot" {
   type        = bool
   description = "Whether to skip the final DB snapshot"
+}
+
+variable "subnet_ids" {
+  type        = list(string)
+  description = "A list of subnet IDs for the DB subnet group"
+}
+
+variable "vpc_security_group_ids" {
+  type        = list(string)
+  description = "A list of VPC security groups to associate"
 }
