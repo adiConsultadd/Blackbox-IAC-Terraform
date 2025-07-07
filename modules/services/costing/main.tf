@@ -52,14 +52,6 @@ locals {
         { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
       ]
     }
-    costing-rfp-cost-summary = {
-      source_dir = "${path.module}/lambda-code/blackbox_rfp_cost_summary_lambda"
-      env        = { EXAMPLE_ENV_VAR = "RfpCostSummaryLambda" }
-      policy_statements = [
-        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
-      ]
-    }
     costing-rfp-infrastructure = {
       source_dir = "${path.module}/lambda-code/blackbox_rfp_infrastructure_lambda"
       env        = { EXAMPLE_ENV_VAR = "RfpInfrastructureLambda" }

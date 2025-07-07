@@ -4,6 +4,14 @@
 locals {
   project_lambda = "arn:aws:lambda:*:*:function:${var.project_name}-${var.environment}-lambda_*"
   lambdas = {
+    drafting-rfp-cost-summary = {
+      source_dir = "${path.module}/lambda-code/blackbox_rfp_cost_summary_lambda"
+      env        = { EXAMPLE_ENV_VAR = "RfpCostSummaryLambda" }
+      policy_statements = [
+        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
+      ]
+    }
     drafting-company-data = {
       source_dir = "${path.module}/lambda-code/blackbox_company_data_lambda"
       env        = { EXAMPLE_ENV_VAR = "CompanyDataLambda" }
@@ -119,17 +127,18 @@ module "lambda" {
 # ###############################################################################
 # # 4. State Machine
 # ###############################################################################
-# module "drafting_state_machine" {
-#   source = "../../base-infra/step-function"
+module "drafting_state_machine" {
+  source = "../../base-infra/step-function"
 
-#   project_name       = var.project_name
-#   environment        = var.environment
-#   state_machine_name = "drafting-workflow"
-#   definition         = templatefile("${path.module}/state-machine.tftpl", {
-#     company_data_lambda_arn         = module.lambda["drafting-company-data"].lambda_arn
-#     extract_text_lambda_arn         = module.lambda["drafting-extract-text"].lambda_arn
-#     summary_lambda_arn              = module.lambda["drafting-summary"].lambda_arn
-#     table_of_content_lambda_arn     = module.lambda["drafting-table-of-content"].lambda_arn
-#     content_regeneration_lambda_arn = module.lambda["drafting-content-regeneration"].lambda_arn
-#   })
-# }
+  project_name       = var.project_name
+  environment        = var.environment
+  state_machine_name = "drafting-workflow"
+  definition = templatefile("${path.module}/state-machine.tftpl", {
+    rfp_cost_summary_lambda_arn = module.lambda["drafting-rfp-cost-summary"].lambda_arn
+    summary_lambda_arn          = module.lambda["drafting-summary"].lambda_arn
+    system_summary_lambda_arn   = module.lambda["drafting-system-summary"].lambda_arn
+    company_data_lambda_arn     = module.lambda["drafting-company-data"].lambda_arn
+    table_of_content_lambda_arn = module.lambda["drafting-table-of-content"].lambda_arn
+    user_preference_lambda_arn  = module.lambda["drafting-user-preference"].lambda_arn
+  })
+}

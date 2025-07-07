@@ -1,47 +1,97 @@
 {
-  "Comment": "A state machine for the drafting service that runs some tasks in parallel and others sequentially.",
-  "StartAt": "ProcessCompanyData",
+  "Comment": "A state machine for the drafting service based on the provided architecture.",
+  "StartAt": "LambdaProcessingChain",
   "States": {
-    "ProcessCompanyData": {
-      "Type": "Task",
-      "Resource": "${company_data_lambda_arn}",
-      "Next": "ParallelTextProcessing"
-    },
-    "ParallelTextProcessing": {
+    "LambdaProcessingChain": {
       "Type": "Parallel",
-      "Next": "GenerateTableOfContents",
+      "End": true,
       "Branches": [
         {
-          "StartAt": "ExtractText",
+          "StartAt": "GenerateRfpCostSummary",
           "States": {
-            "ExtractText": {
+            "GenerateRfpCostSummary": {
               "Type": "Task",
-              "Resource": "${extract_text_lambda_arn}",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${rfp_cost_summary_lambda_arn}",
+                "Payload.$": "$"
+              },
               "End": true
             }
           }
         },
         {
-          "StartAt": "GenerateInitialSummary",
+          "StartAt": "GenerateSystemSummary",
           "States": {
-            "GenerateInitialSummary": {
+            "GenerateSystemSummary": {
               "Type": "Task",
-              "Resource": "${summary_lambda_arn}",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${system_summary_lambda_arn}",
+                "Payload.$": "$"
+              },
+              "Next": "ProcessDataAndTocInParallel"
+            },
+            "ProcessDataAndTocInParallel": {
+              "Type": "Parallel",
+              "End": true,
+              "Branches": [
+                {
+                  "StartAt": "GetCompanyData",
+                  "States": {
+                    "GetCompanyData": {
+                      "Type": "Task",
+                      "Resource": "arn:aws:states:::lambda:invoke",
+                      "Parameters": {
+                        "FunctionName": "${company_data_lambda_arn}",
+                        "Payload.$": "$"
+                      },
+                      "End": true
+                    }
+                  }
+                },
+                {
+                  "StartAt": "GenerateTableOfContent",
+                  "States": {
+                    "GenerateTableOfContent": {
+                      "Type": "Task",
+                      "Resource": "arn:aws:states:::lambda:invoke",
+                      "Parameters": {
+                        "FunctionName": "${table_of_content_lambda_arn}",
+                        "Payload.$": "$"
+                      },
+                      "End": true
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "StartAt": "GenerateUserSummary",
+          "States": {
+            "GenerateUserSummary": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${summary_lambda_arn}",
+                "Payload.$": "$"
+              },
+              "Next": "GetUserPreference"
+            },
+            "GetUserPreference": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${user_preference_lambda_arn}",
+                "Payload.$": "$"
+              },
               "End": true
             }
           }
         }
       ]
-    },
-    "GenerateTableOfContents": {
-      "Type": "Task",
-      "Resource": "${table_of_content_lambda_arn}",
-      "Next": "FinalizeDraft"
-    },
-    "FinalizeDraft": {
-      "Type": "Task",
-      "Resource": "${content_regeneration_lambda_arn}",
-      "End": true
     }
   }
 }
