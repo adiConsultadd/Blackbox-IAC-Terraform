@@ -46,7 +46,21 @@ module "elasticache" {
 }
 
 #############################################################
-# 4.  Sourcing Service
+# 4. Shared SSM Parameter Store
+#############################################################
+module "ssm_parameters" {
+  for_each = var.ssm_parameters
+  source   = "./modules/base-infra/ssm"
+
+  project_name = var.project_name
+  environment  = var.environment
+  param_name   = each.key
+  type         = each.value.type
+  value        = each.value.value
+}
+
+#############################################################
+# 5.  Sourcing Service
 #############################################################
 module "sourcing" {
   source = "./modules/services/sourcing"

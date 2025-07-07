@@ -27,3 +27,8 @@ output "vpc_id" {
   description = "ID of the shared VPC"
   value       = module.networking.vpc_id
 }
+
+output "ssm_parameter_names" {
+  description = "Names of the created SSM parameters"
+  value       = { for k, v in module.ssm_parameters : k => v.name }
+}

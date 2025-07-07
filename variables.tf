@@ -29,3 +29,14 @@ variable "cloudfront_enabled"     { type = bool }
 
 # ---- EventBridge ------------------------------------------
 variable "eventbridge_schedule_expression" { type = string }
+
+# ---- SSM Parameter Store ----------------------------------
+variable "ssm_parameters" {
+  description = "A map of SSM parameters to create"
+  type = map(object({
+    type  = string
+    value = string
+  }))
+  default   = {}
+  sensitive = true
+}
