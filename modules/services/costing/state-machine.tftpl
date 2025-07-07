@@ -1,0 +1,118 @@
+{
+  "Comment": "Run infra, license, and wages branches in parallel, then succeed",
+  "StartAt": "AllCostBranches",
+  "States": {
+    "AllCostBranches": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "CostInfrastructure",
+          "States": {
+            "CostInfrastructure": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${rfp_infrastructure_lambda_arn}",
+                "Payload.$": "$"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 0,
+                  "BackoffRate": 1
+                }
+              ],
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "CostLicense",
+          "States": {
+            "CostLicense": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${rfp_license_lambda_arn}",
+                "Payload.$": "$"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 0,
+                  "BackoffRate": 1
+                }
+              ],
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "HourlyWageDetails",
+          "States": {
+            "HourlyWageDetails": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${hourly_wages_lambda_arn}",
+                "Payload.$": "$"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 0,
+                  "BackoffRate": 1
+                }
+              ],
+              "Next": "HourlyWagesResult"
+            },
+            "HourlyWagesResult": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${hourly_wages_result_lambda_arn}",
+                "Payload.$": "$"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 0,
+                  "BackoffRate": 1
+                }
+              ],
+              "End": true
+            }
+          }
+        }
+      ],
+      "Next": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
+    }
+  }
+}

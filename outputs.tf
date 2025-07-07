@@ -38,13 +38,17 @@ output "drafting_lambda_arns" {
   value       = module.drafting.lambda_arns
 }
 
-output "drafting_state_machine_arn" {
-  description = "ARN of the drafting service's state machine"
-  value       = module.drafting.state_machine_arn
+# output "drafting_state_machine_arn" {
+#   description = "ARN of the drafting service's state machine"
+#   value       = module.drafting.state_machine_arn
+# }
+
+output "costing_lambda_arns" {
+  description = "ARNs of the Lambda functions in the costing service"
+  value       = module.costing.lambda_arns
 }
 
-
-# output "costing_lambda_arns" {
-#   description = "ARNs of the Lambda functions in the costing service"
-#   value       = module.costing.lambda_arns
-# }
+output "costing_state_machine_arn" {
+  description = "ARN of the costing service's state machine"
+  value       = module.costing.state_machine_arn
+}

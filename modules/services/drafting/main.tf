@@ -8,70 +8,80 @@ locals {
       source_dir = "${path.module}/lambda-code/blackbox_company_data_lambda"
       env        = { EXAMPLE_ENV_VAR = "CompanyDataLambda" }
       policy_statements = [
-        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] }
+        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
       ]
     }
     drafting-content-regeneration = {
       source_dir = "${path.module}/lambda-code/blackbox_content_regeneration_lambda"
       env        = { EXAMPLE_ENV_VAR = "ContentRegenerationLambda" }
       policy_statements = [
-        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] }
+        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
       ]
     }
     drafting-extract-text = {
       source_dir = "${path.module}/lambda-code/blackbox_extract_text_from_file"
       env        = { EXAMPLE_ENV_VAR = "ExtractTextLambda" }
       policy_statements = [
-        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] }
+        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
       ]
     }
     drafting-section-content = {
       source_dir = "${path.module}/lambda-code/blackbox_section_content_lambda"
       env        = { EXAMPLE_ENV_VAR = "SectionContentLambda" }
       policy_statements = [
-        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] }
+        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
       ]
     }
     drafting-summary = {
       source_dir = "${path.module}/lambda-code/blackbox_summary_lambda"
       env        = { EXAMPLE_ENV_VAR = "SummaryLambda" }
       policy_statements = [
-        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] }
+        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
       ]
     }
     drafting-system-summary = {
       source_dir = "${path.module}/lambda-code/blackbox_system_summary_lambda"
       env        = { EXAMPLE_ENV_VAR = "SystemSummaryLambda" }
       policy_statements = [
-        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] }
+        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
       ]
     }
     drafting-table-of-content = {
       source_dir = "${path.module}/lambda-code/blackbox_table_of_content_lambda"
       env        = { EXAMPLE_ENV_VAR = "TableOfContentLambda" }
       policy_statements = [
-        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] }
+        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
       ]
     }
     drafting-toc-enrichment = {
       source_dir = "${path.module}/lambda-code/blackbox_toc_enrichment_lambda"
       env        = { EXAMPLE_ENV_VAR = "TocEnrichmentLambda" }
       policy_statements = [
-        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] }
+        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
       ]
     }
     drafting-user-preference = {
       source_dir = "${path.module}/lambda-code/blackbox_user_preference_lambda"
       env        = { EXAMPLE_ENV_VAR = "UserPreferenceLambda" }
       policy_statements = [
-        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] }
+        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
       ]
     }
     drafting-toc-regenerate = {
       source_dir = "${path.module}/lambda-code/blackbox_toc_regenerate_lambda"
       env        = { EXAMPLE_ENV_VAR = "TocRegenerateLambda" }
       policy_statements = [
-        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] }
+        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
       ]
     }
   }
@@ -105,29 +115,21 @@ module "lambda" {
   vpc_security_group_ids = [var.lambda_security_group_id]
 }
 
-###############################################################################
-# 4. State Machine Definition
-###############################################################################
-data "template_file" "sfn_definition" {
-  template = file("${path.module}/state-machine.tftpl")
 
-  vars = {
-    company_data_lambda_arn     = module.lambda["drafting-company-data"].lambda_arn
-    extract_text_lambda_arn     = module.lambda["drafting-extract-text"].lambda_arn
-    summary_lambda_arn          = module.lambda["drafting-summary"].lambda_arn
-    table_of_content_lambda_arn = module.lambda["drafting-table-of-content"].lambda_arn
-    content_regeneration_lambda_arn = module.lambda["drafting-content-regeneration"].lambda_arn
-  }
-}
+# ###############################################################################
+# # 4. State Machine
+# ###############################################################################
+# module "drafting_state_machine" {
+#   source = "../../base-infra/step-function"
 
-###############################################################################
-# 5. State Machine
-###############################################################################
-module "drafting_state_machine" {
-  source = "../../base-infra/step-function"
-
-  project_name       = var.project_name
-  environment        = var.environment
-  state_machine_name = "drafting-workflow"
-  definition         = data.template_file.sfn_definition.rendered
-}
+#   project_name       = var.project_name
+#   environment        = var.environment
+#   state_machine_name = "drafting-workflow"
+#   definition         = templatefile("${path.module}/state-machine.tftpl", {
+#     company_data_lambda_arn         = module.lambda["drafting-company-data"].lambda_arn
+#     extract_text_lambda_arn         = module.lambda["drafting-extract-text"].lambda_arn
+#     summary_lambda_arn              = module.lambda["drafting-summary"].lambda_arn
+#     table_of_content_lambda_arn     = module.lambda["drafting-table-of-content"].lambda_arn
+#     content_regeneration_lambda_arn = module.lambda["drafting-content-regeneration"].lambda_arn
+#   })
+# }
