@@ -32,3 +32,8 @@ output "ssm_parameter_names" {
   description = "Names of the created SSM parameters"
   value       = { for k, v in module.ssm_parameters : k => v.name }
 }
+
+output "drafting_lambda_arns" {
+  description = "ARNs of the Lambda functions in the drafting service"
+  value       = module.drafting.lambda_arns
+}
