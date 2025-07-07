@@ -31,7 +31,22 @@ module "rds" {
 }
 
 #############################################################
-# 3.  Sourcing Service
+# 3. Shared ElastiCache Redis Cluster
+#############################################################
+module "elasticache" {
+  source = "./modules/base-infra/elasticache"
+
+  project_name           = var.project_name
+  environment            = var.environment
+  node_type              = var.elasticache_node_type
+  num_cache_nodes        = var.elasticache_num_nodes
+  engine_version         = var.elasticache_engine_version
+  subnet_ids             = module.networking.private_subnet_ids
+  vpc_security_group_ids = [module.networking.elasticache_security_group_id]
+}
+
+#############################################################
+# 4.  Sourcing Service
 #############################################################
 module "sourcing" {
   source = "./modules/services/sourcing"
@@ -41,9 +56,9 @@ module "sourcing" {
   project_name = var.project_name
 
   # Pass in shared infrastructure details
-  private_subnet_ids       = module.networking.private_subnet_ids
-  lambda_security_group_id = module.networking.lambda_security_group_id
-  db_endpoint              = module.rds.db_endpoint
+  private_subnet_ids         = module.networking.private_subnet_ids
+  lambda_security_group_id   = module.networking.lambda_security_group_id
+  db_endpoint                = module.rds.db_endpoint
 
   # CloudFront Vars
   cloudfront_price_class = var.cloudfront_price_class

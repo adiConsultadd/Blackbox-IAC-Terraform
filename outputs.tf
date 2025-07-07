@@ -18,6 +18,11 @@ output "rds_database_endpoint" {
   value       = module.rds.db_endpoint
 }
 
+output "elasticache_cluster_endpoint" {
+  description = "Endpoint of the shared ElastiCache Redis cluster"
+  value       = module.elasticache.endpoint
+}
+
 output "vpc_id" {
   description = "ID of the shared VPC"
   value       = module.networking.vpc_id

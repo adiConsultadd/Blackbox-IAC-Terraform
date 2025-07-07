@@ -128,6 +128,18 @@ resource "aws_security_group" "rds" {
   }
 }
 
+resource "aws_security_group" "elasticache" {
+  name        = "${var.project_name}-${var.environment}-elasticache-sg"
+  description = "Allow traffic from Lambda to ElastiCache"
+  vpc_id      = aws_vpc.this.id
+
+  tags = {
+    Name        = "${var.project_name}-${var.environment}-elasticache-sg"
+    Environment = var.environment
+    Project     = var.project_name
+  }
+}
+
 resource "aws_security_group" "lambda" {
   name        = "${var.project_name}-${var.environment}-lambda-sg"
   description = "Allow all outbound traffic for Lambda"
@@ -149,10 +161,20 @@ resource "aws_security_group" "lambda" {
 
 resource "aws_security_group_rule" "allow_lambda_to_rds" {
   type                     = "ingress"
-  from_port                = 5432 
+  from_port                = 5432
   to_port                  = 5432
   protocol                 = "tcp"
   security_group_id        = aws_security_group.rds.id
   source_security_group_id = aws_security_group.lambda.id
   description              = "Allow Lambda to connect to RDS"
+}
+
+resource "aws_security_group_rule" "allow_lambda_to_elasticache" {
+  type                     = "ingress"
+  from_port                = 6379 # Default Redis port
+  to_port                  = 6379
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.elasticache.id
+  source_security_group_id = aws_security_group.lambda.id
+  description              = "Allow Lambda to connect to ElastiCache"
 }
