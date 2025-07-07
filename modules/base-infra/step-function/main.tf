@@ -40,7 +40,7 @@ resource "aws_sfn_state_machine" "this" {
   name       = "${var.project_name}-${var.environment}-${var.state_machine_name}"
   role_arn   = aws_iam_role.step_function_role.arn
   definition = var.definition
-
+  type = "EXPRESS"
   tags = {
     Project     = var.project_name,
     Environment = var.environment
