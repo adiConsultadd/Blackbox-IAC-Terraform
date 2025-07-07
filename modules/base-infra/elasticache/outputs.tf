@@ -1,9 +1,9 @@
 output "endpoint" {
-  description = "The endpoint of the ElastiCache Redis cluster"
-  value       = aws_elasticache_cluster.this.cache_nodes[0].address
+  description = "The endpoint of the ElastiCache Serverless Redis cache"
+  value       = aws_elasticache_serverless_cache.this.endpoint[0].address
 }
 
 output "port" {
-  description = "The port of the ElastiCache Redis cluster"
-  value       = aws_elasticache_cluster.this.port
+  description = "The port of the ElastiCache Serverless Redis cache"
+  value       = aws_elasticache_serverless_cache.this.endpoint[0].port
 }

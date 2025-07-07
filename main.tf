@@ -38,9 +38,6 @@ module "elasticache" {
 
   project_name           = var.project_name
   environment            = var.environment
-  node_type              = var.elasticache_node_type
-  num_cache_nodes        = var.elasticache_num_nodes
-  engine_version         = var.elasticache_engine_version
   subnet_ids             = module.networking.private_subnet_ids
   vpc_security_group_ids = [module.networking.elasticache_security_group_id]
 }
