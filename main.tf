@@ -87,29 +87,40 @@ module "sourcing" {
 #############################################################
 # 6.  Drafting Service
 #############################################################
-module "drafting" {
-  source = "./modules/services/drafting"
+# module "drafting" {
+#   source = "./modules/services/drafting"
 
-  # Global Vars
-  environment  = var.environment
-  project_name = var.project_name
+#   # Global Vars
+#   environment  = var.environment
+#   project_name = var.project_name
 
-  # Pass in shared infrastructure details
-  private_subnet_ids       = module.networking.private_subnet_ids
-  lambda_security_group_id = module.networking.lambda_security_group_id
-}
+#   # Pass in shared infrastructure details
+#   private_subnet_ids       = module.networking.private_subnet_ids
+#   lambda_security_group_id = module.networking.lambda_security_group_id
+# }
 
 #############################################################
 # 7.  Costing Service
 #############################################################
-module "costing" {
-  source = "./modules/services/costing"
+# module "costing" {
+#   source = "./modules/services/costing"
 
-  # Global Vars
-  environment  = var.environment
-  project_name = var.project_name
+#   # Global Vars
+#   environment  = var.environment
+#   project_name = var.project_name
 
-  # Pass in shared infrastructure details
-  private_subnet_ids       = module.networking.private_subnet_ids
-  lambda_security_group_id = module.networking.lambda_security_group_id
-}
+#   # Pass in shared infrastructure details
+#   private_subnet_ids       = module.networking.private_subnet_ids
+#   lambda_security_group_id = module.networking.lambda_security_group_id
+# }
+
+#############################################################
+# 8. Lambda Layers
+#############################################################
+# module "lambda_layers" {
+#   source = "./modules/base-infra/layers"
+
+#   project_name = var.project_name
+#   environment  = var.environment
+#   layers       = var.lambda_layers
+# }

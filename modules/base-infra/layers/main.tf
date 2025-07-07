@@ -1,0 +1,27 @@
+resource "aws_s3_bucket" "lambda_layers" {
+  bucket = "${var.project_name}-${var.environment}-lambda-layers"
+}
+
+data "archive_file" "layer_zips" {
+  for_each    = var.layers
+  type        = "zip"
+  source_dir  = each.value.source_path
+  output_path = "${path.module}/build/${each.key}.zip"
+}
+
+resource "aws_s3_object" "layer_objects" {
+  for_each = var.layers
+  bucket   = aws_s3_bucket.lambda_layers.id
+  key      = "${each.key}.zip"
+  source   = data.archive_file.layer_zips[each.key].output_path
+  etag     = filemd5(data.archive_file.layer_zips[each.key].output_path)
+}
+
+resource "aws_lambda_layer_version" "this" {
+  for_each            = var.layers
+  layer_name          = "${var.project_name}-${var.environment}-${each.key}"
+  s3_bucket           = aws_s3_bucket.lambda_layers.id
+  s3_key              = aws_s3_object.layer_objects[each.key].key
+  source_code_hash    = data.archive_file.layer_zips[each.key].output_base64sha256
+  compatible_runtimes = each.value.compatible_runtimes
+}

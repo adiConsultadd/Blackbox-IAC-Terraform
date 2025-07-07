@@ -38,5 +38,15 @@ variable "ssm_parameters" {
     value = string
   }))
   default   = {}
-  sensitive = true
+  # sensitive = true
+}
+
+# ---- Lambda Layers ----------------------------------
+variable "lambda_layers" {
+  description = "Configuration for Lambda layers"
+  type = map(object({
+    source_path         = string
+    compatible_runtimes = list(string)
+  }))
+  default = {}
 }
