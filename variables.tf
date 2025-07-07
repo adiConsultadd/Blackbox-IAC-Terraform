@@ -25,17 +25,6 @@ variable "cloudfront_enabled"     { type = bool }
 # ---- EventBridge ------------------------------------------
 variable "eventbridge_schedule_expression" { type = string }
 
-# ---- SSM Parameter Store ----------------------------------
-variable "ssm_parameters" {
-  description = "A map of SSM parameters to create"
-  type = map(object({
-    type  = string
-    value = string
-  }))
-  default   = {}
-  # sensitive = true
-}
-
 # ---- Lambda Layers ----------------------------------
 variable "lambda_layers" {
   description = "Configuration for Lambda layers"
@@ -61,3 +50,16 @@ variable "ssh_access_cidr" {
   type        = string
   description = "CIDR block for SSH access to the EC2 instance"
 }
+
+# ---- Static SSM Parameters --------------------------------
+variable "google_api_key"    { type = string}
+variable "openai_api_key"    { type = string}
+
+# ---- HigherGov Static SSM Parameters ----------------------
+variable "highergov_apibaseurl" { type = string }
+variable "highergov_apidocurl"  { type = string }
+variable "highergov_apikey"     { type = string}
+variable "highergov_email"      { type = string }
+variable "highergov_loginurl"   { type = string }
+variable "highergov_password"   { type = string}
+variable "highergov_portalurl"  { type = string }

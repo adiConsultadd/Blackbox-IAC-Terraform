@@ -42,22 +42,9 @@ module "elasticache" {
   vpc_security_group_ids = [module.networking.elasticache_security_group_id]
 }
 
-#############################################################
-# 4. Shared SSM Parameter Store
-#############################################################
-module "ssm_parameters" {
-  for_each = var.ssm_parameters
-  source   = "./modules/base-infra/ssm"
-
-  project_name = var.project_name
-  environment  = var.environment
-  param_name   = each.key
-  type         = each.value.type
-  value        = each.value.value
-}
 
 #############################################################
-# 5. Shared EC2 Instance
+# 4. Shared EC2 Instance
 #############################################################
 module "ec2" {
   source = "./modules/base-infra/ec2"
@@ -74,7 +61,7 @@ module "ec2" {
 }
 
 #############################################################
-# 6.  Sourcing Service
+# 5.  Sourcing Service
 #############################################################
 module "sourcing" {
   source = "./modules/services/sourcing"
@@ -99,7 +86,7 @@ module "sourcing" {
 }
 
 #############################################################
-# 7.  Drafting Service
+# 6.  Drafting Service
 #############################################################
 module "drafting" {
   source = "./modules/services/drafting"
@@ -114,7 +101,7 @@ module "drafting" {
 }
 
 #############################################################
-# 8.  Costing Service
+# 7.  Costing Service
 #############################################################
 module "costing" {
   source = "./modules/services/costing"
@@ -129,7 +116,7 @@ module "costing" {
 }
 
 #############################################################
-# 9. Lambda Layers
+# 8. Lambda Layers
 #############################################################
 module "lambda_layers" {
   source = "./modules/base-infra/layers"
@@ -137,4 +124,44 @@ module "lambda_layers" {
   project_name = var.project_name
   environment  = var.environment
   layers       = var.lambda_layers
+}
+
+#############################################################
+# 9. SSM Parameter Store
+#############################################################
+locals {
+  all_ssm_parameters = {
+    # Dynamic Parameters
+    "/blackbox-${var.environment}/db-endpoint"   = { value = module.rds.db_endpoint, type = "String" }
+    "/blackbox-${var.environment}/db-password"    = { value = module.rds.db_password, type = "SecureString" }
+    "/blackbox-${var.environment}/db-port"        = { value = module.rds.db_port, type = "String" }
+    "/blackbox-${var.environment}/db-user"        = { value = module.rds.db_username, type = "String" }
+    "/blackbox-${var.environment}/redis-endpoint" = { value = module.elasticache.endpoint, type = "String" }
+    "/blackbox-${var.environment}/cloudfront-url" = { value = module.sourcing.cloudfront_domain, type = "String" }
+
+    # Static Parameters
+    "/blackbox-${var.environment}/google_api_key" = { value = var.google_api_key, type = "SecureString" }
+    "/blackbox-${var.environment}/highergov-apibaseurl" = { value = var.highergov_apibaseurl, type = "String" }
+    "/blackbox-${var.environment}/highergov-apidocurl" = { value = var.highergov_apidocurl, type = "String" }
+    "/blackbox-${var.environment}/highergov-apikey" = { value = var.highergov_apikey, type = "SecureString" }
+    "/blackbox-${var.environment}/highergov-email" = { value = var.highergov_email, type = "String" }
+    "/blackbox-${var.environment}/highergov-loginurl" = { value = var.highergov_loginurl, type = "String" }
+    "/blackbox-${var.environment}/highergov-password"  = { value = var.highergov_password, type = "SecureString" }
+    "/blackbox-${var.environment}/highergov-portalurl" = { value = var.highergov_portalurl, type = "String" }
+    "/blackbox-${var.environment}/openai_api_key" = { value = var.openai_api_key, type = "SecureString" }
+  }
+}
+
+resource "aws_ssm_parameter" "app_config" {
+  for_each = local.all_ssm_parameters
+
+  name      = each.key
+  type      = each.value.type
+  value     = each.value.value
+  overwrite = true
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project_name
+  }
 }

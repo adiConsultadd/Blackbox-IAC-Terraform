@@ -3,7 +3,7 @@ output "lambda_arns" {
   value       = { for k, m in module.lambda : k => m.lambda_arn }
 }
 
-# output "state_machine_arn" {
-#   description = "The ARN of the drafting service state machine"
-#   value       = module.drafting_state_machine.state_machine_arn
-# }
+output "drafting_state_machine_arn" {
+  description = "The ARN of the drafting service state machine"
+  value       = module.drafting_state_machine.state_machine_arn
+}
