@@ -149,6 +149,7 @@ locals {
     "/blackbox-${var.environment}/highergov-password"  = { value = var.highergov_password, type = "SecureString" }
     "/blackbox-${var.environment}/highergov-portalurl" = { value = var.highergov_portalurl, type = "String" }
     "/blackbox-${var.environment}/openai_api_key" = { value = var.openai_api_key, type = "SecureString" }
+    "/blackbox-${var.environment}/search_id" = { value = var.search_id }
   }
 }
 

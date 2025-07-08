@@ -63,3 +63,4 @@ variable "highergov_email"      { type = string }
 variable "highergov_loginurl"   { type = string }
 variable "highergov_password"   { type = string}
 variable "highergov_portalurl"  { type = string }
+variable "search_id"            { type = string }
