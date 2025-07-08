@@ -8,8 +8,14 @@ locals {
       source_dir = "${path.module}/lambda-code/blackbox_rfp_cost_summary_lambda"
       env        = { EXAMPLE_ENV_VAR = "RfpCostSummaryLambda" }
       policy_statements = [
+        # CloudWatch Logs permissions
         { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
+        # VPC permissions for Lambda to operate within a VPC
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
+        # ElastiCache Serverless permissions - Allows connection to ANY cache
+        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
+        # RDS DB permissions - Allows connection to ANY database
+        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
       ]
     }
     drafting-company-data = {
@@ -17,7 +23,9 @@ locals {
       env        = { EXAMPLE_ENV_VAR = "CompanyDataLambda" }
       policy_statements = [
         { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
+        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
+        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
       ]
     }
     drafting-content-regeneration = {
@@ -25,7 +33,9 @@ locals {
       env        = { EXAMPLE_ENV_VAR = "ContentRegenerationLambda" }
       policy_statements = [
         { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
+        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
+        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
       ]
     }
     drafting-extract-text = {
@@ -33,7 +43,9 @@ locals {
       env        = { EXAMPLE_ENV_VAR = "ExtractTextLambda" }
       policy_statements = [
         { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
+        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
+        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
       ]
     }
     drafting-section-content = {
@@ -41,7 +53,9 @@ locals {
       env        = { EXAMPLE_ENV_VAR = "SectionContentLambda" }
       policy_statements = [
         { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
+        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
+        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
       ]
     }
     drafting-summary = {
@@ -49,7 +63,9 @@ locals {
       env        = { EXAMPLE_ENV_VAR = "SummaryLambda" }
       policy_statements = [
         { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
+        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
+        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
       ]
     }
     drafting-system-summary = {
@@ -57,7 +73,9 @@ locals {
       env        = { EXAMPLE_ENV_VAR = "SystemSummaryLambda" }
       policy_statements = [
         { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
+        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
+        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
       ]
     }
     drafting-table-of-content = {
@@ -65,7 +83,9 @@ locals {
       env        = { EXAMPLE_ENV_VAR = "TableOfContentLambda" }
       policy_statements = [
         { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
+        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
+        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
       ]
     }
     drafting-toc-enrichment = {
@@ -73,7 +93,9 @@ locals {
       env        = { EXAMPLE_ENV_VAR = "TocEnrichmentLambda" }
       policy_statements = [
         { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
+        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
+        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
       ]
     }
     drafting-user-preference = {
@@ -81,7 +103,9 @@ locals {
       env        = { EXAMPLE_ENV_VAR = "UserPreferenceLambda" }
       policy_statements = [
         { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
+        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
+        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
       ]
     }
     drafting-toc-regenerate = {
@@ -89,7 +113,9 @@ locals {
       env        = { EXAMPLE_ENV_VAR = "TocRegenerateLambda" }
       policy_statements = [
         { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
+        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
+        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
       ]
     }
   }

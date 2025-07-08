@@ -8,8 +8,14 @@ locals {
       source_dir = "${path.module}/lambda-code/blackbox_hourly_wages_lambda"
       env        = { EXAMPLE_ENV_VAR = "HourlyWagesLambda" }
       policy_statements = [
+        # CloudWatch Logs permissions
         { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
+        # VPC permissions for Lambda to operate within a VPC
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
+        # ElastiCache Serverless permissions - Allows connection to ANY cache
+        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
+        # RDS DB permissions - Allows connection to ANY database
+        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
       ]
     }
     costing-hourly-wages-result = {
@@ -17,7 +23,9 @@ locals {
       env        = { EXAMPLE_ENV_VAR = "HourlyWagesResultLambda" }
       policy_statements = [
         { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
+        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
+        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
       ]
     }
     costing-rfp-cost-formating = {
@@ -25,7 +33,9 @@ locals {
       env        = { EXAMPLE_ENV_VAR = "RfpCostFormatingLambda" }
       policy_statements = [
         { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
+        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
+        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
       ]
     }
     costing-rfp-cost-image-calculation = {
@@ -33,7 +43,9 @@ locals {
       env        = { EXAMPLE_ENV_VAR = "RfpCostImageCalculationLambda" }
       policy_statements = [
         { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
+        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
+        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
       ]
     }
     costing-rfp-cost-image-extractor = {
@@ -41,7 +53,9 @@ locals {
       env        = { EXAMPLE_ENV_VAR = "RfpCostImageExtractorLambda" }
       policy_statements = [
         { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
+        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
+        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
       ]
     }
     costing-rfp-cost-regenerating = {
@@ -49,7 +63,9 @@ locals {
       env        = { EXAMPLE_ENV_VAR = "RfpCostRegeneratingLambda" }
       policy_statements = [
         { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
+        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
+        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
       ]
     }
     costing-rfp-infrastructure = {
@@ -57,7 +73,9 @@ locals {
       env        = { EXAMPLE_ENV_VAR = "RfpInfrastructureLambda" }
       policy_statements = [
         { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
+        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
+        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
       ]
     }
     costing-rfp-license = {
@@ -65,7 +83,9 @@ locals {
       env        = { EXAMPLE_ENV_VAR = "RfpLicenseLambda" }
       policy_statements = [
         { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" }
+        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
+        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
+        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
       ]
     }
   }
