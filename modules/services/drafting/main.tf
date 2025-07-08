@@ -1,137 +1,46 @@
 ###############################################################################
-# 1. Lambda definitions (source dir, env vars, IAM policy)
+# 1. IAM Role (Whole Service)
 ###############################################################################
 locals {
-  project_lambda = "arn:aws:lambda:*:*:function:${var.project_name}-${var.environment}-lambda_*"
-  lambdas = {
-    drafting-rfp-cost-summary = {
-      source_dir = "${path.module}/lambda-code/blackbox_rfp_cost_summary_lambda"
-      env        = { EXAMPLE_ENV_VAR = "RfpCostSummaryLambda" }
-      policy_statements = [
-        # CloudWatch Logs permissions
-        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        # VPC permissions for Lambda to operate within a VPC
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
-        # ElastiCache Serverless permissions - Allows connection to ANY cache
-        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
-        # RDS DB permissions - Allows connection to ANY database
-        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
-      ]
-    }
-    drafting-company-data = {
-      source_dir = "${path.module}/lambda-code/blackbox_company_data_lambda"
-      env        = { EXAMPLE_ENV_VAR = "CompanyDataLambda" }
-      policy_statements = [
-        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
-        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
-        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
-      ]
-    }
-    drafting-content-regeneration = {
-      source_dir = "${path.module}/lambda-code/blackbox_content_regeneration_lambda"
-      env        = { EXAMPLE_ENV_VAR = "ContentRegenerationLambda" }
-      policy_statements = [
-        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
-        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
-        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
-      ]
-    }
-    drafting-extract-text = {
-      source_dir = "${path.module}/lambda-code/blackbox_extract_text_from_file"
-      env        = { EXAMPLE_ENV_VAR = "ExtractTextLambda" }
-      policy_statements = [
-        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
-        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
-        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
-      ]
-    }
-    drafting-section-content = {
-      source_dir = "${path.module}/lambda-code/blackbox_section_content_lambda"
-      env        = { EXAMPLE_ENV_VAR = "SectionContentLambda" }
-      policy_statements = [
-        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
-        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
-        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
-      ]
-    }
-    drafting-summary = {
-      source_dir = "${path.module}/lambda-code/blackbox_summary_lambda"
-      env        = { EXAMPLE_ENV_VAR = "SummaryLambda" }
-      policy_statements = [
-        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
-        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
-        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
-      ]
-    }
-    drafting-system-summary = {
-      source_dir = "${path.module}/lambda-code/blackbox_system_summary_lambda"
-      env        = { EXAMPLE_ENV_VAR = "SystemSummaryLambda" }
-      policy_statements = [
-        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
-        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
-        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
-      ]
-    }
-    drafting-table-of-content = {
-      source_dir = "${path.module}/lambda-code/blackbox_table_of_content_lambda"
-      env        = { EXAMPLE_ENV_VAR = "TableOfContentLambda" }
-      policy_statements = [
-        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
-        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
-        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
-      ]
-    }
-    drafting-toc-enrichment = {
-      source_dir = "${path.module}/lambda-code/blackbox_toc_enrichment_lambda"
-      env        = { EXAMPLE_ENV_VAR = "TocEnrichmentLambda" }
-      policy_statements = [
-        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
-        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
-        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
-      ]
-    }
-    drafting-user-preference = {
-      source_dir = "${path.module}/lambda-code/blackbox_user_preference_lambda"
-      env        = { EXAMPLE_ENV_VAR = "UserPreferenceLambda" }
-      policy_statements = [
-        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
-        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
-        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
-      ]
-    }
-    drafting-toc-regenerate = {
-      source_dir = "${path.module}/lambda-code/blackbox_toc_regenerate_lambda"
-      env        = { EXAMPLE_ENV_VAR = "TocRegenerateLambda" }
-      policy_statements = [
-        { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-        { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
-        { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
-        { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
-      ]
-    }
-  }
+  service_policy_statements = [
+    # CloudWatch Logs permissions
+    { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
+    # VPC permissions for Lambda to operate within a VPC
+    { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
+    # ElastiCache Serverless permissions - Allows connection to ANY cache
+    { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
+    # RDS DB permissions - Allows connection to ANY database
+    { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
+  ]
+}
+
+# Create the IAM role once for the service
+module "drafting_lambda_role" {
+  source = "../../base-infra/iam-lambda"
+
+  role_name         = "${var.project_name}-${var.environment}-drafting-service-role"
+  project_name      = var.project_name
+  environment       = var.environment
+  policy_statements = local.service_policy_statements
 }
 
 ###############################################################################
-# 2. IAM role per Lambda
+# 2. Lambda function definitions
 ###############################################################################
-module "lambda_roles" {
-  for_each = local.lambdas
-  source   = "../../base-infra/iam-lambda"
-
-  role_name         = "${var.project_name}-${var.environment}-${each.key}-role"
-  project_name      = var.project_name
-  environment       = var.environment
-  policy_statements = each.value.policy_statements
+locals {
+  lambdas = {
+    "drafting-rfp-cost-summary"     = { source_dir = "${path.module}/lambda-code/blackbox_rfp_cost_summary_lambda" }
+    "drafting-company-data"         = { source_dir = "${path.module}/lambda-code/blackbox_company_data_lambda" }
+    "drafting-content-regeneration" = { source_dir = "${path.module}/lambda-code/blackbox_content_regeneration_lambda" }
+    "drafting-extract-text"         = { source_dir = "${path.module}/lambda-code/blackbox_extract_text_from_file" }
+    "drafting-section-content"      = { source_dir = "${path.module}/lambda-code/blackbox_section_content_lambda" }
+    "drafting-summary"              = { source_dir = "${path.module}/lambda-code/blackbox_summary_lambda" }
+    "drafting-system-summary"       = { source_dir = "${path.module}/lambda-code/blackbox_system_summary_lambda" }
+    "drafting-table-of-content"     = { source_dir = "${path.module}/lambda-code/blackbox_table_of_content_lambda" }
+    "drafting-toc-enrichment"       = { source_dir = "${path.module}/lambda-code/blackbox_toc_enrichment_lambda" }
+    "drafting-user-preference"      = { source_dir = "${path.module}/lambda-code/blackbox_user_preference_lambda" }
+    "drafting-toc-regenerate"       = { source_dir = "${path.module}/lambda-code/blackbox_toc_regenerate_lambda" }
+  }
 }
 
 ###############################################################################
@@ -141,18 +50,20 @@ module "lambda" {
   for_each = local.lambdas
   source   = "../../base-infra/lambda"
 
-  function_name          = "${var.project_name}-${var.environment}-${each.key}"
-  source_dir             = each.value.source_dir
-  lambda_role_arn        = module.lambda_roles[each.key].role_arn
-  environment_variables  = each.value.env
+  function_name = "${var.project_name}-${var.environment}-${each.key}"
+  source_dir    = each.value.source_dir
+
+  # All functions now use the SAME role ARN
+  lambda_role_arn = module.drafting_lambda_role.role_arn
+
+  # VPC config remains the same
   vpc_subnet_ids         = var.private_subnet_ids
   vpc_security_group_ids = [var.lambda_security_group_id]
 }
 
-
-# ###############################################################################
-# # 4. State Machine
-# ###############################################################################
+###############################################################################
+# 4. State Machine 
+###############################################################################
 module "drafting_state_machine" {
   source = "../../base-infra/step-function"
 

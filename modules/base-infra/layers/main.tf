@@ -1,10 +1,17 @@
+# modules/base-infra/layers/main.tf
+
 resource "null_resource" "pip_install" {
   for_each = var.layers
   triggers = {
     requirements_hash = filemd5("${each.value.source_path}/requirements.txt")
   }
+
   provisioner "local-exec" {
-    command = "pip install -r ${each.value.source_path}/requirements.txt -t ${path.module}/build/${each.key}/python"
+    command = <<-EOT
+      mkdir -p ${path.module}/build/${each.key}/python
+      touch ${path.module}/build/${each.key}/.placeholder
+      pip install -r ${each.value.source_path}/requirements.txt -t ${path.module}/build/${each.key}/python
+    EOT
   }
 }
 
@@ -17,7 +24,7 @@ data "archive_file" "layer_zips" {
   type        = "zip"
   source_dir  = "${path.module}/build/${each.key}"
   output_path = "${path.module}/build/${each.key}.zip"
-  depends_on = [null_resource.pip_install]
+  depends_on  = [null_resource.pip_install]
 }
 
 resource "aws_s3_object" "layer_objects" {

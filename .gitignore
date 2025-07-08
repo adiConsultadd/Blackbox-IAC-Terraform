@@ -26,3 +26,6 @@ Thumbs.db
 
 # Lambda packages
 *.zip
+
+python/
+.placeholder
