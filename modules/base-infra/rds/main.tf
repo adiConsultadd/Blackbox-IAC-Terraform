@@ -19,6 +19,7 @@ resource "aws_db_instance" "myrds" {
   skip_final_snapshot    = var.skip_final_snapshot
   db_subnet_group_name   = aws_db_subnet_group.this.name
   vpc_security_group_ids = var.vpc_security_group_ids
+  multi_az               = var.multi_az
 
   tags = {
     Name        = "${var.project_name}-${var.environment}-db"

@@ -10,6 +10,7 @@ module "networking" {
   public_subnet_cidrs  = var.public_subnet_cidrs
   private_subnet_cidrs = var.private_subnet_cidrs
   availability_zones   = var.availability_zones
+  ssh_access_cidr      = var.ssh_access_cidr
 }
 
 #############################################################
@@ -28,6 +29,7 @@ module "rds" {
   skip_final_snapshot    = var.skip_final_snapshot
   subnet_ids             = module.networking.private_subnet_ids
   vpc_security_group_ids = [module.networking.rds_security_group_id]
+  multi_az               = var.db_multi_az
 }
 
 #############################################################
@@ -44,20 +46,90 @@ module "elasticache" {
 
 
 #############################################################
-# 4. Shared EC2 Instance
+# 4. Shared EC2 Instance & IAM Role
 #############################################################
+
+# IAM Role for EC2 Instance
+resource "aws_iam_role" "ec2_role" {
+  name = "${var.project_name}-${var.environment}-ec2-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      },
+    ]
+  })
+
+  tags = {
+    Project     = var.project_name
+    Environment = var.environment
+  }
+}
+
+# IAM Policy for EC2 Role
+resource "aws_iam_policy" "ec2_policy" {
+  name        = "${var.project_name}-${var.environment}-ec2-policy"
+  description = "Policy for EC2 to invoke Lambda and access project S3 buckets."
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action   = "lambda:InvokeFunction"
+        Effect   = "Allow"
+        Resource = "arn:aws:lambda:${var.aws_region}:${data.aws_caller_identity.current.account_id}:function:${var.project_name}-${var.environment}-*"
+      },
+      {
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket",
+          "s3:PutObject",
+          "s3:DeleteObject"
+        ]
+        Effect   = "Allow"
+        Resource = [
+          "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-rfp-files",
+          "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-rfp-files/*",
+          "arn:aws:s3:::${var.project_name}-${var.environment}-lambda-layers",
+          "arn:aws:s3:::${var.project_name}-${var.environment}-lambda-layers/*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_policy_attach" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = aws_iam_policy.ec2_policy.arn
+}
+
+resource "aws_iam_instance_profile" "ec2_profile" {
+  name = "${var.project_name}-${var.environment}-ec2-profile"
+  role = aws_iam_role.ec2_role.name
+}
+
+# EC2 Module Instantiation
 module "ec2" {
   source = "./modules/base-infra/ec2"
 
-  project_name      = var.project_name
-  environment       = var.environment
-  ami_id            = var.ec2_ami_id
-  instance_type     = var.ec2_instance_type
-  key_name          = var.ec2_key_name
-  
-  subnet_id = module.networking.private_subnet_ids[0]
+  project_name  = var.project_name
+  environment   = var.environment
+  ami_id        = var.ec2_ami_id
+  instance_type = var.ec2_instance_type
+  key_name      = var.ec2_key_name
 
-  security_group_id = module.networking.ec2_security_group_id
+  subnet_id                   = module.networking.public_subnet_ids[0]
+  associate_public_ip_address = true
+  security_group_id           = module.networking.ec2_security_group_id
+  iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
+
+  depends_on = [aws_iam_instance_profile.ec2_profile]
 }
 
 #############################################################
@@ -71,9 +143,9 @@ module "sourcing" {
   project_name = var.project_name
 
   # Pass in shared infrastructure details
-  private_subnet_ids         = module.networking.private_subnet_ids
-  lambda_security_group_id   = module.networking.lambda_security_group_id
-  db_endpoint                = module.rds.db_endpoint
+  private_subnet_ids       = module.networking.private_subnet_ids
+  lambda_security_group_id = module.networking.lambda_security_group_id
+  db_endpoint              = module.rds.db_endpoint
 
   # CloudFront Vars
   cloudfront_price_class = var.cloudfront_price_class
@@ -132,7 +204,7 @@ module "lambda_layers" {
 locals {
   all_ssm_parameters = {
     # Dynamic Parameters
-    "/blackbox-${var.environment}/db-endpoint"   = { value = module.rds.db_endpoint, type = "String" }
+    "/blackbox-${var.environment}/db-endpoint"    = { value = module.rds.db_endpoint, type = "String" }
     "/blackbox-${var.environment}/db-password"    = { value = module.rds.db_password, type = "SecureString" }
     "/blackbox-${var.environment}/db-port"        = { value = module.rds.db_port, type = "String" }
     "/blackbox-${var.environment}/db-user"        = { value = module.rds.db_username, type = "String" }
@@ -140,16 +212,16 @@ locals {
     "/blackbox-${var.environment}/cloudfront-url" = { value = module.sourcing.cloudfront_domain, type = "String" }
 
     # Static Parameters
-    "/blackbox-${var.environment}/google_api_key" = { value = var.google_api_key, type = "SecureString" }
+    "/blackbox-${var.environment}/google_api_key"      = { value = var.google_api_key, type = "SecureString" }
     "/blackbox-${var.environment}/highergov-apibaseurl" = { value = var.highergov_apibaseurl, type = "String" }
     "/blackbox-${var.environment}/highergov-apidocurl" = { value = var.highergov_apidocurl, type = "String" }
-    "/blackbox-${var.environment}/highergov-apikey" = { value = var.highergov_apikey, type = "SecureString" }
-    "/blackbox-${var.environment}/highergov-email" = { value = var.highergov_email, type = "String" }
-    "/blackbox-${var.environment}/highergov-loginurl" = { value = var.highergov_loginurl, type = "String" }
+    "/blackbox-${var.environment}/highergov-apikey"    = { value = var.highergov_apikey, type = "SecureString" }
+    "/blackbox-${var.environment}/highergov-email"     = { value = var.highergov_email, type = "String" }
+    "/blackbox-${var.environment}/highergov-loginurl"  = { value = var.highergov_loginurl, type = "String" }
     "/blackbox-${var.environment}/highergov-password"  = { value = var.highergov_password, type = "SecureString" }
     "/blackbox-${var.environment}/highergov-portalurl" = { value = var.highergov_portalurl, type = "String" }
-    "/blackbox-${var.environment}/openai_api_key" = { value = var.openai_api_key, type = "SecureString" }
-    "/blackbox-${var.environment}/search_id" = { value = var.search_id }
+    "/blackbox-${var.environment}/openai_api_key"      = { value = var.openai_api_key, type = "SecureString" }
+    "/blackbox-${var.environment}/search_id"           = { value = var.search_id, type = "String"}
   }
 }
 

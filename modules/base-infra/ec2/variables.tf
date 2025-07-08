@@ -32,3 +32,15 @@ variable "security_group_id" {
   type        = string
   description = "The ID of the security group to associate with the instance"
 }
+
+variable "iam_instance_profile" {
+  type        = string
+  description = "The IAM instance profile to associate with the EC2 instance"
+  default     = null
+}
+
+variable "associate_public_ip_address" {
+  type        = bool
+  description = "Whether to associate a public IP address with the instance"
+  default     = false
+}
