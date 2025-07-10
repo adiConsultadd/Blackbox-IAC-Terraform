@@ -48,8 +48,6 @@ module "elasticache" {
 #############################################################
 # 4. Shared EC2 Instance & IAM Role
 #############################################################
-
-# IAM Role for EC2 Instance
 resource "aws_iam_role" "ec2_role" {
   name = "${var.project_name}-${var.environment}-ec2-role"
 
@@ -72,7 +70,6 @@ resource "aws_iam_role" "ec2_role" {
   }
 }
 
-# IAM Policy for EC2 Role
 resource "aws_iam_policy" "ec2_policy" {
   name        = "${var.project_name}-${var.environment}-ec2-policy"
   description = "Policy for EC2 to invoke Lambda and access project S3 buckets."
@@ -96,8 +93,9 @@ resource "aws_iam_policy" "ec2_policy" {
         Resource = [
           "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-rfp-files",
           "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-rfp-files/*",
-          "arn:aws:s3:::${var.project_name}-${var.environment}-lambda-layers",
-          "arn:aws:s3:::${var.project_name}-${var.environment}-lambda-layers/*"
+          # Add access to the new lambda artifacts bucket
+          aws_s3_bucket.lambda_artifacts.arn,
+          "${aws_s3_bucket.lambda_artifacts.arn}/*"
         ]
       }
     ]
@@ -114,15 +112,14 @@ resource "aws_iam_instance_profile" "ec2_profile" {
   role = aws_iam_role.ec2_role.name
 }
 
-# EC2 Module Instantiation
 module "ec2" {
   source = "./modules/base-infra/ec2"
 
-  project_name  = var.project_name
-  environment   = var.environment
-  ami_id        = var.ec2_ami_id
+  project_name = var.project_name
+  environment  = var.environment
+  ami_id       = var.ec2_ami_id
   instance_type = var.ec2_instance_type
-  key_name      = var.ec2_key_name
+  key_name     = var.ec2_key_name
 
   subnet_id                   = module.networking.public_subnet_ids[0]
   associate_public_ip_address = true
@@ -133,7 +130,43 @@ module "ec2" {
 }
 
 #############################################################
-# 5.  Sourcing Service
+# 5. Lambda Artifacts Bucket and Placeholder Code
+#############################################################
+resource "aws_s3_bucket" "lambda_artifacts" {
+  bucket = "${var.project_name}-${var.environment}-lambda-artifacts"
+}
+
+resource "aws_s3_bucket_versioning" "lambda_artifacts_versioning" {
+  bucket = aws_s3_bucket.lambda_artifacts.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "lambda_artifacts_public_access" {
+  bucket = aws_s3_bucket.lambda_artifacts.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+data "archive_file" "placeholder" {
+  type        = "zip"
+  source_dir  = "${path.root}/placeholder-code"
+  output_path = "${path.root}/placeholder.zip"
+}
+
+resource "aws_s3_object" "placeholder" {
+  bucket = aws_s3_bucket.lambda_artifacts.id
+  key    = "placeholder.zip"
+  source = data.archive_file.placeholder.output_path
+  etag   = filemd5(data.archive_file.placeholder.output_path)
+}
+
+#############################################################
+# 6.  Sourcing Service
 #############################################################
 module "sourcing" {
   source = "./modules/services/sourcing"
@@ -155,10 +188,15 @@ module "sourcing" {
 
   # EventBridge Vars
   eventbridge_schedule_expression = var.eventbridge_schedule_expression
+
+  # Placeholder Lambda Artifacts
+  placeholder_s3_bucket        = aws_s3_bucket.lambda_artifacts.id
+  placeholder_s3_key           = aws_s3_object.placeholder.key
+  placeholder_source_code_hash = aws_s3_object.placeholder.etag
 }
 
 #############################################################
-# 6.  Drafting Service
+# 7.  Drafting Service
 #############################################################
 module "drafting" {
   source = "./modules/services/drafting"
@@ -170,10 +208,15 @@ module "drafting" {
   # Pass in shared infrastructure details
   private_subnet_ids       = module.networking.private_subnet_ids
   lambda_security_group_id = module.networking.lambda_security_group_id
+
+  # Placeholder Lambda Artifacts
+  placeholder_s3_bucket        = aws_s3_bucket.lambda_artifacts.id
+  placeholder_s3_key           = aws_s3_object.placeholder.key
+  placeholder_source_code_hash = aws_s3_object.placeholder.etag
 }
 
 #############################################################
-# 7.  Costing Service
+# 8.  Costing Service
 #############################################################
 module "costing" {
   source = "./modules/services/costing"
@@ -185,17 +228,11 @@ module "costing" {
   # Pass in shared infrastructure details
   private_subnet_ids       = module.networking.private_subnet_ids
   lambda_security_group_id = module.networking.lambda_security_group_id
-}
 
-#############################################################
-# 8. Lambda Layers
-#############################################################
-module "lambda_layers" {
-  source = "./modules/base-infra/layers"
-
-  project_name = var.project_name
-  environment  = var.environment
-  layers       = var.lambda_layers
+  # Placeholder Lambda Artifacts
+  placeholder_s3_bucket        = aws_s3_bucket.lambda_artifacts.id
+  placeholder_s3_key           = aws_s3_object.placeholder.key
+  placeholder_source_code_hash = aws_s3_object.placeholder.etag
 }
 
 #############################################################
@@ -221,7 +258,7 @@ locals {
     "/blackbox-${var.environment}/highergov-password"  = { value = var.highergov_password, type = "SecureString" }
     "/blackbox-${var.environment}/highergov-portalurl" = { value = var.highergov_portalurl, type = "String" }
     "/blackbox-${var.environment}/openai_api_key"      = { value = var.openai_api_key, type = "SecureString" }
-    "/blackbox-${var.environment}/search_id"           = { value = var.search_id, type = "String"}
+    "/blackbox-${var.environment}/search_id"           = { value = var.search_id, type = "String" }
   }
 }
 

@@ -29,17 +29,17 @@ module "drafting_lambda_role" {
 ###############################################################################
 locals {
   lambdas = {
-    "drafting-rfp-cost-summary"     = { source_dir = "${path.module}/lambda-code/blackbox_rfp_cost_summary_lambda" }
-    "drafting-company-data"         = { source_dir = "${path.module}/lambda-code/blackbox_company_data_lambda" }
-    "drafting-content-regeneration" = { source_dir = "${path.module}/lambda-code/blackbox_content_regeneration_lambda" }
-    "drafting-extract-text"         = { source_dir = "${path.module}/lambda-code/blackbox_extract_text_from_file" }
-    "drafting-section-content"      = { source_dir = "${path.module}/lambda-code/blackbox_section_content_lambda" }
-    "drafting-summary"              = { source_dir = "${path.module}/lambda-code/blackbox_summary_lambda" }
-    "drafting-system-summary"       = { source_dir = "${path.module}/lambda-code/blackbox_system_summary_lambda" }
-    "drafting-table-of-content"     = { source_dir = "${path.module}/lambda-code/blackbox_table_of_content_lambda" }
-    "drafting-toc-enrichment"       = { source_dir = "${path.module}/lambda-code/blackbox_toc_enrichment_lambda" }
-    "drafting-user-preference"      = { source_dir = "${path.module}/lambda-code/blackbox_user_preference_lambda" }
-    "drafting-toc-regenerate"       = { source_dir = "${path.module}/lambda-code/blackbox_toc_regenerate_lambda" }
+    "drafting-rfp-cost-summary"   = {}
+    "drafting-company-data"       = {}
+    "drafting-content-regeneration" = {}
+    "drafting-extract-text"       = {}
+    "drafting-section-content"    = {}
+    "drafting-summary"            = {}
+    "drafting-system-summary"     = {}
+    "drafting-table-of-content"   = {}
+    "drafting-toc-enrichment"     = {}
+    "drafting-user-preference"    = {}
+    "drafting-toc-regenerate"     = {}
   }
 }
 
@@ -51,7 +51,11 @@ module "lambda" {
   source   = "../../base-infra/lambda"
 
   function_name = "${var.project_name}-${var.environment}-${each.key}"
-  source_dir    = each.value.source_dir
+
+  # Deploy from the placeholder artifact in S3
+  s3_bucket        = var.placeholder_s3_bucket
+  s3_key           = var.placeholder_s3_key
+  source_code_hash = var.placeholder_source_code_hash
 
   # All functions now use the SAME role ARN
   lambda_role_arn = module.drafting_lambda_role.role_arn

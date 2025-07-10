@@ -26,7 +26,7 @@ module "cloudfront" {
 # 3. IAM Role (Whole Service)
 ###############################################################################
 locals {
-  bucket_arn     = "arn:aws:s3:::${module.s3.bucket_name}"
+  bucket_arn   = "arn:aws:s3:::${module.s3.bucket_name}"
   bucket_objects = "${local.bucket_arn}/*"
   project_lambda = "arn:aws:lambda:*:*:function:${var.project_name}-${var.environment}-lambda_*"
 
@@ -59,18 +59,14 @@ module "sourcing_lambda_role" {
 # 4. Lambda function definitions
 ###############################################################################
 locals {
-  # Note: Policies and complex env vars are removed from here
   lambdas = {
     "sourcing-lambda-1" = {
-      source_dir = "${path.module}/lambda-code/lambda-1"
       env = { S3_BUCKET_NAME = module.s3.bucket_name }
     }
     "sourcing-lambda-2" = {
-      source_dir = "${path.module}/lambda-code/lambda-2"
       env = { DB_ENDPOINT = var.db_endpoint }
     }
     "sourcing-lambda-3" = {
-      source_dir = "${path.module}/lambda-code/lambda-3"
       env = {
         S3_BUCKET_NAME    = module.s3.bucket_name
         DB_ENDPOINT       = var.db_endpoint
@@ -88,8 +84,12 @@ module "lambda" {
   source   = "../../base-infra/lambda"
 
   function_name = "${var.project_name}-${var.environment}-${each.key}"
-  source_dir    = each.value.source_dir
-  
+
+  # Deploy from the placeholder artifact in S3
+  s3_bucket        = var.placeholder_s3_bucket
+  s3_key           = var.placeholder_s3_key
+  source_code_hash = var.placeholder_source_code_hash
+
   # All functions now use the SAME role ARN
   lambda_role_arn = module.sourcing_lambda_role.role_arn
 
@@ -105,10 +105,10 @@ module "lambda" {
 # 6. EventBridge (Schedules Lambda-1 of this service)
 ###############################################################################
 module "eventbridge" {
-  source      = "../../base-infra/eventbridge"
+  source    = "../../base-infra/eventbridge"
   environment = var.environment
   project_name = var.project_name
-  suffix      = "daily-trigger-sourcing-lambda-1"
+  suffix    = "daily-trigger-sourcing-lambda-1"
 
   lambda_arn_to_trigger = module.lambda["sourcing-lambda-1"].lambda_arn
   schedule_expression   = var.eventbridge_schedule_expression

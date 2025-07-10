@@ -33,16 +33,6 @@ variable "cloudfront_enabled" { type = bool }
 # ---- EventBridge ------------------------------------------
 variable "eventbridge_schedule_expression" { type = string }
 
-# ---- Lambda Layers ----------------------------------
-variable "lambda_layers" {
-  description = "Configuration for Lambda layers"
-  type = map(object({
-    source_path         = string
-    compatible_runtimes = list(string)
-  }))
-  default = {}
-}
-
 # ---- EC2 --------------------------------------------------
 variable "ec2_instance_type" {
   type = string

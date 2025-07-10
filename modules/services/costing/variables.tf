@@ -12,3 +12,16 @@ variable "lambda_security_group_id" {
   type        = string
   description = "The ID of the shared Lambda security group"
 }
+
+variable "placeholder_s3_bucket" {
+  type        = string
+  description = "S3 bucket for the placeholder Lambda code."
+}
+variable "placeholder_s3_key" {
+  type        = string
+  description = "S3 key for the placeholder Lambda zip."
+}
+variable "placeholder_source_code_hash" {
+  type        = string
+  description = "Hash of the placeholder zip to trigger updates."
+}

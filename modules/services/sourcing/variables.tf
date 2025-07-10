@@ -1,4 +1,4 @@
-variable "environment"  { type = string }
+variable "environment" { type = string }
 variable "project_name" { type = string }
 
 # ---- Shared Infrastructure Inputs -------------------------------------------
@@ -19,8 +19,22 @@ variable "db_endpoint" {
 # ---- CloudFront -------------------------------------------------------------
 variable "cloudfront_price_class" { type = string }
 variable "viewer_protocol_policy" { type = string }
-variable "default_root_object"    { type = string }
-variable "cloudfront_enabled"     { type = bool }
+variable "default_root_object" { type = string }
+variable "cloudfront_enabled" { type = bool }
 
 # ---- EventBridge ------------------------------------------------------------
 variable "eventbridge_schedule_expression" { type = string }
+
+# ---- Placeholder Lambda Artifacts -------------------------------------------
+variable "placeholder_s3_bucket" {
+  type        = string
+  description = "S3 bucket for the placeholder Lambda code."
+}
+variable "placeholder_s3_key" {
+  type        = string
+  description = "S3 key for the placeholder Lambda zip."
+}
+variable "placeholder_source_code_hash" {
+  type        = string
+  description = "Hash of the placeholder zip to trigger updates."
+}

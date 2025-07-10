@@ -27,14 +27,14 @@ module "costing_lambda_role" {
 ###############################################################################
 locals {
   lambdas = {
-    "costing-hourly-wages"                 = { source_dir = "${path.module}/lambda-code/blackbox_hourly_wages_lambda" }
-    "costing-hourly-wages-result"          = { source_dir = "${path.module}/lambda-code/blackbox_hourly_wages_result_lambda" }
-    "costing-rfp-cost-formating"           = { source_dir = "${path.module}/lambda-code/blackbox_rfp_cost_formating_lambda" }
-    "costing-rfp-cost-image-calculation"   = { source_dir = "${path.module}/lambda-code/blackbox_rfp_cost_image_calculation_lambda" }
-    "costing-rfp-cost-image-extractor"     = { source_dir = "${path.module}/lambda-code/blackbox_rfp_cost_image_extractor_lambda" }
-    "costing-rfp-cost-regenerating"        = { source_dir = "${path.module}/lambda-code/blackbox_rfp_cost_regenerating_lambda" }
-    "costing-rfp-infrastructure"           = { source_dir = "${path.module}/lambda-code/blackbox_rfp_infrastructure_lambda" }
-    "costing-rfp-license"                  = { source_dir = "${path.module}/lambda-code/blackbox_rfp_license_lambda" }
+    "costing-hourly-wages"                   = {}
+    "costing-hourly-wages-result"            = {}
+    "costing-rfp-cost-formating"             = {}
+    "costing-rfp-cost-image-calculation"     = {}
+    "costing-rfp-cost-image-extractor"       = {}
+    "costing-rfp-cost-regenerating"          = {}
+    "costing-rfp-infrastructure"             = {}
+    "costing-rfp-license"                    = {}
   }
 }
 
@@ -46,8 +46,12 @@ module "lambda" {
   source   = "../../base-infra/lambda"
 
   function_name = "${var.project_name}-${var.environment}-${each.key}"
-  source_dir    = each.value.source_dir
-  
+
+  # Deploy from the placeholder artifact in S3
+  s3_bucket        = var.placeholder_s3_bucket
+  s3_key           = var.placeholder_s3_key
+  source_code_hash = var.placeholder_source_code_hash
+
   # All functions now use the SAME role ARN
   lambda_role_arn = module.costing_lambda_role.role_arn
 
