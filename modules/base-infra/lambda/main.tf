@@ -26,6 +26,17 @@ resource "aws_lambda_function" "this" {
     subnet_ids         = var.vpc_subnet_ids
     security_group_ids = var.vpc_security_group_ids
   }
+  
+  lifecycle {
+    ignore_changes = [
+      # Ignore changes to the S3 key, as the CI/CD pipeline will manage this.
+      s3_key,
+      # Ignore changes to the source code hash for the same reason.
+      source_code_hash,
+      # Ignore changes to layers, as the CI/CD pipeline will also manage these.
+      layers,
+    ]
+  }
 
   depends_on = [aws_cloudwatch_log_group.this]
 }
