@@ -174,7 +174,8 @@ module "sourcing" {
   # Global Vars
   environment  = var.environment
   project_name = var.project_name
-
+  lambda_runtime = var.lambda_runtime
+  
   # Pass in shared infrastructure details
   private_subnet_ids       = module.networking.private_subnet_ids
   lambda_security_group_id = module.networking.lambda_security_group_id
@@ -204,6 +205,7 @@ module "drafting" {
   # Global Vars
   environment  = var.environment
   project_name = var.project_name
+  lambda_runtime = var.lambda_runtime
 
   # Pass in shared infrastructure details
   private_subnet_ids       = module.networking.private_subnet_ids
@@ -224,6 +226,7 @@ module "costing" {
   # Global Vars
   environment  = var.environment
   project_name = var.project_name
+  lambda_runtime = var.lambda_runtime
 
   # Pass in shared infrastructure details
   private_subnet_ids       = module.networking.private_subnet_ids

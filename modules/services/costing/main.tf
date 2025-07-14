@@ -44,7 +44,8 @@ locals {
 module "lambda" {
   for_each = local.lambdas
   source   = "../../base-infra/lambda"
-
+  runtime = var.lambda_runtime
+  
   function_name = "${var.project_name}-${var.environment}-${each.key}"
 
   # Deploy from the placeholder artifact in S3

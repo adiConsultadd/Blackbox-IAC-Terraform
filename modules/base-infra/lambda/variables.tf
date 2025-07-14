@@ -26,7 +26,6 @@ variable "lambda_role_arn" {
 
 variable "runtime" {
   type    = string
-  default = "python3.12" 
 }
 
 variable "handler" {

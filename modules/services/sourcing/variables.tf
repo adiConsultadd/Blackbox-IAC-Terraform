@@ -1,5 +1,8 @@
 variable "environment" { type = string }
 variable "project_name" { type = string }
+variable "lambda_runtime" {
+  type = string
+}
 
 # ---- Shared Infrastructure Inputs -------------------------------------------
 variable "private_subnet_ids" {
