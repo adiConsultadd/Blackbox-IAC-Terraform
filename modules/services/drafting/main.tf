@@ -32,6 +32,7 @@ locals {
     "drafting-rfp-cost-summary"   = {}
     "drafting-company-data"       = {}
     "drafting-content-regeneration" = {}
+    "drafting-executive-summary" = {}
     "drafting-extract-text"       = {}
     "drafting-section-content"    = {}
     "drafting-summary"            = {}

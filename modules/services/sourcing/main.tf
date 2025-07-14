@@ -60,14 +60,10 @@ module "sourcing_lambda_role" {
 ###############################################################################
 locals {
   lambdas = {
-    "sourcing-lambda-1" = {
-      env = { S3_BUCKET_NAME = module.s3.bucket_name }
-    }
-    "sourcing-lambda-2" = {
-      env = { DB_ENDPOINT = var.db_endpoint }
-    }
-    "sourcing-lambda-3" = {
-      env = {
+    # These keys now match your Python filenames after transformation
+    "sourcing-rfp-sourcing-web"                 = {env = { S3_BUCKET_NAME = module.s3.bucket_name }}
+    "sourcing-rfp-details-db-ingestion"         = {env = { DB_ENDPOINT = var.db_endpoint }}
+    "sourcing-rfp-documents-s3-url-db-ingestion" = {env = {
         S3_BUCKET_NAME    = module.s3.bucket_name
         DB_ENDPOINT       = var.db_endpoint
         CLOUDFRONT_DISTRO = module.cloudfront.distribution_id
@@ -75,6 +71,7 @@ locals {
     }
   }
 }
+
 
 ###############################################################################
 # 5. Lambda functions
@@ -111,6 +108,6 @@ module "eventbridge" {
   project_name = var.project_name
   suffix    = "daily-trigger-sourcing-lambda-1"
 
-  lambda_arn_to_trigger = module.lambda["sourcing-lambda-1"].lambda_arn
+  lambda_arn_to_trigger = module.lambda["sourcing-rfp-sourcing-web"].lambda_arn
   schedule_expression   = var.eventbridge_schedule_expression
 }
