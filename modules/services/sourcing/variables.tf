@@ -19,6 +19,12 @@ variable "db_endpoint" {
   sensitive   = true
 }
 
+variable "required_layer_arns" {
+  description = "A list of Lambda Layer ARNs to attach to the functions in this service."
+  type        = list(string)
+  default     = []
+}
+
 # ---- CloudFront -------------------------------------------------------------
 variable "cloudfront_price_class" { type = string }
 variable "viewer_protocol_policy" { type = string }

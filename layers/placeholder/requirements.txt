@@ -1,0 +1,2 @@
+# This file is intentionally left blank for Terraform's placeholder layer.
+# The real dependencies are packaged and deployed by the CI/CD pipeline.

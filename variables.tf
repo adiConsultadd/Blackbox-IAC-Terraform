@@ -7,6 +7,15 @@ variable "lambda_runtime" {
   type        = string
 }
 
+variable "lambda_layers" {
+  description = "A map of Lambda layers to create. The key is the short name"
+  type = map(object({
+    source_path         = string
+    compatible_runtimes = list(string)
+  }))
+  default = {}
+}
+
 # ---- Networking -------------------------------------------
 variable "vpc_cidr" { type = string }
 variable "public_subnet_cidrs" { type = list(string) }

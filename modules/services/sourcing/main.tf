@@ -97,6 +97,9 @@ module "lambda" {
   # VPC config remains the same
   vpc_subnet_ids         = var.private_subnet_ids
   vpc_security_group_ids = [var.lambda_security_group_id]
+
+  # Attaching required layers
+  layers = var.required_layer_arns
 }
 
 ###############################################################################

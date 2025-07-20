@@ -166,6 +166,17 @@ resource "aws_s3_object" "placeholder" {
 }
 
 #############################################################
+# 6.  Layers
+#############################################################
+module "layers" {
+  source = "./modules/base-infra/layers"
+
+  project_name = var.project_name
+  environment  = var.environment
+  layers       = var.lambda_layers
+}
+
+#############################################################
 # 6.  Sourcing Service
 #############################################################
 module "sourcing" {
@@ -194,6 +205,12 @@ module "sourcing" {
   placeholder_s3_bucket        = aws_s3_bucket.lambda_artifacts.id
   placeholder_s3_key           = aws_s3_object.placeholder.key
   placeholder_source_code_hash = aws_s3_object.placeholder.etag
+
+  # Lambda Layers
+  required_layer_arns = [
+    module.layers.layer_arns["common"],
+  ]
+
 }
 
 #############################################################
@@ -215,6 +232,13 @@ module "drafting" {
   placeholder_s3_bucket        = aws_s3_bucket.lambda_artifacts.id
   placeholder_s3_key           = aws_s3_object.placeholder.key
   placeholder_source_code_hash = aws_s3_object.placeholder.etag
+
+  # Lambda Layers
+  required_layer_arns = [
+    module.layers.layer_arns["common"],
+    module.layers.layer_arns["google"],
+    module.layers.layer_arns["openai"],
+  ]
 }
 
 #############################################################
@@ -236,6 +260,13 @@ module "costing" {
   placeholder_s3_bucket        = aws_s3_bucket.lambda_artifacts.id
   placeholder_s3_key           = aws_s3_object.placeholder.key
   placeholder_source_code_hash = aws_s3_object.placeholder.etag
+
+  # Lambda Layers
+  required_layer_arns = [
+    module.layers.layer_arns["common"],
+    module.layers.layer_arns["google"],
+    module.layers.layer_arns["openai"],
+  ]
 }
 
 #############################################################
