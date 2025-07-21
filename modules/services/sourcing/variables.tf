@@ -1,7 +1,14 @@
 variable "environment" { type = string }
 variable "project_name" { type = string }
-variable "lambda_runtime" {
-  type = string
+
+variable "lambda_configs" {
+  description = "A map of configurations for each Lambda function in the service."
+  type = map(object({
+    timeout     = number
+    memory_size = number
+    runtime     = optional(string)
+  }))
+  default = {}
 }
 
 # ---- Shared Infrastructure Inputs -------------------------------------------

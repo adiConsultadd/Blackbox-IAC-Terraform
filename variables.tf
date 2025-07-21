@@ -2,15 +2,20 @@ variable "aws_region" { type = string }
 variable "environment" { type = string }
 variable "project_name" { type = string }
 
-variable "lambda_runtime" {
-  description = "The runtime environment for the Lambda functions"
-  type        = string
-}
-
 variable "lambda_layers" {
   description = "A map of Lambda layers to create. The key is the short name"
   type = map(object({
     compatible_runtimes = list(string)
+  }))
+  default = {}
+}
+
+variable "lambda_configs" {
+  description = "Configuration settings (timeout, memory) for each Lambda function across all services."
+  type = map(object({
+    timeout     = number
+    memory_size = number
+    runtime     = string
   }))
   default = {}
 }

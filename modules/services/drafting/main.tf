@@ -50,7 +50,9 @@ locals {
 module "lambda" {
   for_each = local.lambdas
   source   = "../../base-infra/lambda"
-  runtime = var.lambda_runtime
+  runtime       = var.lambda_configs[each.key].runtime
+  timeout       = var.lambda_configs[each.key].timeout
+  memory_size   = var.lambda_configs[each.key].memory_size
   
   function_name = "${var.project_name}-${var.environment}-${each.key}"
 

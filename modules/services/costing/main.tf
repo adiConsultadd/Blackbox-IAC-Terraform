@@ -27,7 +27,6 @@ module "costing_lambda_role" {
 ###############################################################################
 locals {
   lambdas = {
-    "costing-hourly-wages"               = { layers = ["common", "google"] }
     "costing-hourly-wages-result"        = { layers = ["common"] }
     "costing-rfp-cost-formating"         = { layers = ["common", "openai"] }
     "costing-rfp-cost-image-calculation" = { layers = ["common", "google"] }
@@ -44,7 +43,9 @@ locals {
 module "lambda" {
   for_each = local.lambdas
   source   = "../../base-infra/lambda"
-  runtime = var.lambda_runtime
+  runtime       = var.lambda_configs[each.key].runtime
+  timeout       = var.lambda_configs[each.key].timeout
+  memory_size   = var.lambda_configs[each.key].memory_size
   
   function_name = "${var.project_name}-${var.environment}-${each.key}"
 
@@ -65,7 +66,48 @@ module "lambda" {
 }
 
 ###############################################################################
-# 4. State Machines
+# 4. ECR-Based Lambda (Costing-Hourly-Wages)
+###############################################################################
+resource "aws_ecr_repository" "hourly_wages_repo" {
+  name                 = "${var.project_name}-${var.environment}-costing-hourly-wages"
+  image_tag_mutability = "MUTABLE" 
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  tags = {
+    Project     = var.project_name
+    Environment = var.environment
+  }
+}
+
+resource "aws_lambda_function" "costing_hourly_wages_ecr" {
+  function_name = "${var.project_name}-${var.environment}-costing-hourly-wages"
+  role          = module.costing_lambda_role.role_arn
+  package_type = "Image"
+  image_uri    = "${aws_ecr_repository.hourly_wages_repo.repository_url}:latest"
+
+  timeout     = 30
+  memory_size = 512 
+
+  vpc_config {
+    subnet_ids         = var.private_subnet_ids
+    security_group_ids = [var.lambda_security_group_id]
+  }
+  lifecycle {
+    ignore_changes = [image_uri]
+  }
+
+  tags = {
+    Project     = var.project_name
+    Environment = var.environment
+  }
+}
+
+
+###############################################################################
+# 5. State Machines
 ###############################################################################
 module "costing_state_machine_1" {
   source = "../../base-infra/step-function"

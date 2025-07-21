@@ -4,9 +4,6 @@ variable "environment" {
 variable "project_name" {
   type = string
 }
-variable "lambda_runtime" {
-  type = string
-}
 variable "private_subnet_ids" {
   type        = list(string)
   description = "List of private subnet IDs from the shared VPC"
@@ -22,6 +19,15 @@ variable "available_layer_arns" {
   default     = {}
 }
 
+variable "lambda_configs" {
+  description = "A map of configurations for each Lambda function in the service."
+  type = map(object({
+    timeout     = number
+    memory_size = number
+    runtime     = optional(string)
+  }))
+  default = {}
+}
 
 variable "placeholder_s3_bucket" {
   type        = string
