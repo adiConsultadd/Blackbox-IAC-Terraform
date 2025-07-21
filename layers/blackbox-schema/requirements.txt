@@ -1,1 +1,1 @@
-blackbox-schema-2.0.9
+blackbox-schemas
