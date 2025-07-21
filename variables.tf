@@ -10,7 +10,6 @@ variable "lambda_runtime" {
 variable "lambda_layers" {
   description = "A map of Lambda layers to create. The key is the short name"
   type = map(object({
-    source_path         = string
     compatible_runtimes = list(string)
   }))
   default = {}
