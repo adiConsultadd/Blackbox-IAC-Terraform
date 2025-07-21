@@ -84,31 +84,27 @@ locals {
 # 5. Lambda functions
 ###############################################################################
 module "lambda" {
-  for_each = local.lambdas
-  source   = "../../base-infra/lambda"
-  runtime       = var.lambda_configs[each.key].runtime
-  timeout       = var.lambda_configs[each.key].timeout
-  memory_size   = var.lambda_configs[each.key].memory_size
-  
+  for_each = var.lambdas
+
+  source        = "../../base-infra/lambda"
   function_name = "${var.project_name}-${var.environment}-${each.key}"
 
-  # Deploy from the placeholder artifact in S3
+  # Configuration from the .tfvars file
+  runtime       = each.value.runtime
+  timeout       = each.value.timeout
+  memory_size   = each.value.memory_size
+  layers        = [for layer_key in each.value.layers : var.available_layer_arns[layer_key]]
+  environment_variables = each.value.env_vars
+
+  # Standard parameters
   s3_bucket        = var.placeholder_s3_bucket
   s3_key           = var.placeholder_s3_key
   source_code_hash = var.placeholder_source_code_hash
+  lambda_role_arn  = module.sourcing_lambda_role.role_arn
 
-  # All functions now use the SAME role ARN
-  lambda_role_arn = module.sourcing_lambda_role.role_arn
-
-  # Set function-specific environment variables
-  environment_variables = each.value.env
-
-  # VPC config remains the same
+  # VPC configuration
   vpc_subnet_ids         = var.private_subnet_ids
   vpc_security_group_ids = [var.lambda_security_group_id]
-
-  # Attaching required layers
-  layers = [for layer_key in each.value.layers : var.available_layer_arns[layer_key]]
 }
 
 ###############################################################################

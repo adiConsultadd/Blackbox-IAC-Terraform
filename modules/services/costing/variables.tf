@@ -19,12 +19,14 @@ variable "available_layer_arns" {
   default     = {}
 }
 
-variable "lambda_configs" {
-  description = "A map of configurations for each Lambda function in the service."
+variable "lambdas" {
+  description = "A map of lambda function definitions for this service."
   type = map(object({
+    layers      = list(string)
+    runtime     = string
     timeout     = number
     memory_size = number
-    runtime     = string
+    env_vars    = optional(map(string))
   }))
   default = {}
 }

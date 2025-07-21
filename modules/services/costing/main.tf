@@ -23,50 +23,34 @@ module "costing_lambda_role" {
 }
 
 ###############################################################################
-# 2. Lambda function definitions
-###############################################################################
-locals {
-  lambdas = {
-    "costing-hourly-wages-result"        = { layers = ["common"] }
-    "costing-rfp-cost-formating"         = { layers = ["common", "openai"] }
-    "costing-rfp-cost-image-calculation" = { layers = ["common", "google"] }
-    "costing-rfp-cost-image-extractor"   = { layers = ["common", "google"] }
-    "costing-rfp-cost-regenerating"      = { layers = ["common", "openai"] }
-    "costing-rfp-infrastructure"         = { layers = ["common", "openai"] }
-    "costing-rfp-license"                = { layers = ["common", "openai"] }
-  }
-}
-
-###############################################################################
-# 3. Lambda functions (referencing the single service role)
+# 2. Lambda functions (referencing the single service role)
 ###############################################################################
 module "lambda" {
-  for_each = local.lambdas
-  source   = "../../base-infra/lambda"
-  runtime       = var.lambda_configs[each.key].runtime
-  timeout       = var.lambda_configs[each.key].timeout
-  memory_size   = var.lambda_configs[each.key].memory_size
-  
+  for_each = { for k, v in var.lambdas : k => v if k != "costing-hourly-wages" }
+
+  source        = "../../base-infra/lambda"
   function_name = "${var.project_name}-${var.environment}-${each.key}"
 
-  # Deploy from the placeholder artifact in S3
+  # Configuration from the .tfvars file
+  runtime       = each.value.runtime
+  timeout       = each.value.timeout
+  memory_size   = each.value.memory_size
+  layers        = [for layer_key in each.value.layers : var.available_layer_arns[layer_key]]
+  environment_variables = each.value.env_vars
+
+  # Standard parameters
   s3_bucket        = var.placeholder_s3_bucket
   s3_key           = var.placeholder_s3_key
   source_code_hash = var.placeholder_source_code_hash
+  lambda_role_arn  = module.costing_lambda_role.role_arn
 
-  # All functions now use the SAME role ARN
-  lambda_role_arn = module.costing_lambda_role.role_arn
-
-  # VPC config remains the same
+  # VPC configuration
   vpc_subnet_ids         = var.private_subnet_ids
   vpc_security_group_ids = [var.lambda_security_group_id]
-
-  # Attaching the lambda layers
-  layers = [for layer_key in each.value.layers : var.available_layer_arns[layer_key]]
 }
 
 ###############################################################################
-# 4. ECR-Based Lambda (Costing-Hourly-Wages)
+# 3. ECR-Based Lambda (Costing-Hourly-Wages)
 ###############################################################################
 resource "aws_ecr_repository" "hourly_wages_repo" {
   name                 = "${var.project_name}-${var.environment}-costing-hourly-wages"
@@ -83,13 +67,15 @@ resource "aws_ecr_repository" "hourly_wages_repo" {
 }
 
 resource "aws_lambda_function" "costing_hourly_wages_ecr" {
+  count = lookup(var.lambdas, "costing-hourly-wages", null) != null ? 1 : 0
+  
   function_name = "${var.project_name}-${var.environment}-costing-hourly-wages"
   role          = module.costing_lambda_role.role_arn
-  package_type = "Image"
-  image_uri    = "${aws_ecr_repository.hourly_wages_repo.repository_url}:latest"
+  package_type  = "Image"
+  image_uri     = "${aws_ecr_repository.hourly_wages_repo.repository_url}:latest"
 
-  timeout     = var.lambda_configs["costing-hourly-wages"].timeout
-  memory_size = var.lambda_configs["costing-hourly-wages"].memory_size
+  timeout     = var.lambdas["costing-hourly-wages"].timeout
+  memory_size = var.lambdas["costing-hourly-wages"].memory_size
 
   vpc_config {
     subnet_ids         = var.private_subnet_ids
@@ -107,7 +93,7 @@ resource "aws_lambda_function" "costing_hourly_wages_ecr" {
 
 
 ###############################################################################
-# 5. State Machines
+# 4. State Machines
 ###############################################################################
 module "costing_state_machine_1" {
   source = "../../base-infra/step-function"
@@ -118,7 +104,7 @@ module "costing_state_machine_1" {
   definition = templatefile("${path.module}/state-machine-1.tftpl", {
     rfp_infrastructure_lambda_arn  = module.lambda["costing-rfp-infrastructure"].lambda_arn
     rfp_license_lambda_arn         = module.lambda["costing-rfp-license"].lambda_arn
-    hourly_wages_lambda_arn        = module.lambda["costing-hourly-wages"].lambda_arn
+    hourly_wages_lambda_arn        = length(aws_lambda_function.costing_hourly_wages_ecr) > 0 ? aws_lambda_function.costing_hourly_wages_ecr[0].arn : ""
     hourly_wages_result_lambda_arn = module.lambda["costing-hourly-wages-result"].lambda_arn
   })
 }

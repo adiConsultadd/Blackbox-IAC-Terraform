@@ -185,7 +185,7 @@ module "sourcing" {
   # Global Vars
   environment  = var.environment
   project_name = var.project_name
-  lambda_configs = var.lambda_configs
+  lambdas        = lookup(var.services_lambdas, "sourcing", {})
 
   # Pass in shared infrastructure details
   private_subnet_ids       = module.networking.private_subnet_ids
@@ -220,7 +220,7 @@ module "drafting" {
   # Global Vars
   environment  = var.environment
   project_name = var.project_name
-  lambda_configs = var.lambda_configs
+  lambdas        = lookup(var.services_lambdas, "drafting", {})
 
   # Pass in shared infrastructure details
   private_subnet_ids       = module.networking.private_subnet_ids
@@ -244,7 +244,7 @@ module "costing" {
   # Global Vars
   environment  = var.environment
   project_name = var.project_name
-  lambda_configs = var.lambda_configs
+  lambdas        = lookup(var.services_lambdas, "costing", {})
 
   # Pass in shared infrastructure details
   private_subnet_ids       = module.networking.private_subnet_ids
@@ -264,25 +264,12 @@ module "costing" {
 #############################################################
 locals {
   all_ssm_parameters = {
-    # Dynamic Parameters
     "/blackbox-${var.environment}/db-endpoint"    = { value = module.rds.db_endpoint, type = "String" }
     "/blackbox-${var.environment}/db-password"    = { value = module.rds.db_password, type = "SecureString" }
     "/blackbox-${var.environment}/db-port"        = { value = module.rds.db_port, type = "String" }
     "/blackbox-${var.environment}/db-user"        = { value = module.rds.db_username, type = "String" }
     "/blackbox-${var.environment}/redis-endpoint" = { value = module.elasticache.endpoint, type = "String" }
     "/blackbox-${var.environment}/cloudfront-url" = { value = module.sourcing.cloudfront_domain, type = "String" }
-
-    # Static Parameters
-    "/blackbox-${var.environment}/google_api_key"      = { value = var.google_api_key, type = "SecureString" }
-    "/blackbox-${var.environment}/highergov-apibaseurl" = { value = var.highergov_apibaseurl, type = "String" }
-    "/blackbox-${var.environment}/highergov-apidocurl" = { value = var.highergov_apidocurl, type = "String" }
-    "/blackbox-${var.environment}/highergov-apikey"    = { value = var.highergov_apikey, type = "SecureString" }
-    "/blackbox-${var.environment}/highergov-email"     = { value = var.highergov_email, type = "String" }
-    "/blackbox-${var.environment}/highergov-loginurl"  = { value = var.highergov_loginurl, type = "String" }
-    "/blackbox-${var.environment}/highergov-password"  = { value = var.highergov_password, type = "SecureString" }
-    "/blackbox-${var.environment}/highergov-portalurl" = { value = var.highergov_portalurl, type = "String" }
-    "/blackbox-${var.environment}/openai_api_key"      = { value = var.openai_api_key, type = "SecureString" }
-    "/blackbox-${var.environment}/search_id"           = { value = var.search_id, type = "String" }
   }
 }
 

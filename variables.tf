@@ -10,13 +10,15 @@ variable "lambda_layers" {
   default = {}
 }
 
-variable "lambda_configs" {
-  description = "Configuration settings (timeout, memory) for each Lambda function across all services."
-  type = map(object({
+variable "services_lambdas" {
+  description = "A complete definition of all lambdas for all services."
+  type = map(map(object({
+    layers      = list(string)
+    runtime     = string
     timeout     = number
     memory_size = number
-    runtime     = string
-  }))
+    env_vars    = optional(map(string))
+  })))
   default = {}
 }
 
@@ -66,29 +68,3 @@ variable "ssh_access_cidr" {
   type        = string
   description = "CIDR block for SSH access to the EC2 instance"
 }
-
-# ---- Static SSM Parameters --------------------------------
-variable "google_api_key" {
-  type      = string
-  sensitive = true
-}
-variable "openai_api_key" {
-  type      = string
-  sensitive = true
-}
-
-# ---- HigherGov Static SSM Parameters ----------------------
-variable "highergov_apibaseurl" { type = string }
-variable "highergov_apidocurl" { type = string }
-variable "highergov_apikey" {
-  type      = string
-  sensitive = true
-}
-variable "highergov_email" { type = string }
-variable "highergov_loginurl" { type = string }
-variable "highergov_password" {
-  type      = string
-  sensitive = true
-}
-variable "highergov_portalurl" { type = string }
-variable "search_id" { type = string }

@@ -2,7 +2,11 @@ output "lambda_arns" {
   description = "Map of Lambda function ARNs for the costing service"
   value = merge(
     { for k, m in module.lambda : k => m.lambda_arn },
-    { "costing-hourly-wages" = aws_lambda_function.costing_hourly_wages_ecr.arn }
+    (
+      length(aws_lambda_function.costing_hourly_wages_ecr) > 0 ?
+      { "costing-hourly-wages" = aws_lambda_function.costing_hourly_wages_ecr[0].arn } :
+      {}
+    )
   )
 }
 
