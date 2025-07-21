@@ -27,14 +27,14 @@ module "costing_lambda_role" {
 ###############################################################################
 locals {
   lambdas = {
-    "costing-hourly-wages"                   = {}
-    "costing-hourly-wages-result"            = {}
-    "costing-rfp-cost-formating"             = {}
-    "costing-rfp-cost-image-calculation"     = {}
-    "costing-rfp-cost-image-extractor"       = {}
-    "costing-rfp-cost-regenerating"          = {}
-    "costing-rfp-infrastructure"             = {}
-    "costing-rfp-license"                    = {}
+    "costing-hourly-wages"               = { layers = ["common", "google"] }
+    "costing-hourly-wages-result"        = { layers = ["common"] }
+    "costing-rfp-cost-formating"         = { layers = ["common", "openai"] }
+    "costing-rfp-cost-image-calculation" = { layers = ["common", "google"] }
+    "costing-rfp-cost-image-extractor"   = { layers = ["common", "google"] }
+    "costing-rfp-cost-regenerating"      = { layers = ["common", "openai"] }
+    "costing-rfp-infrastructure"         = { layers = ["common", "openai"] }
+    "costing-rfp-license"                = { layers = ["common", "openai"] }
   }
 }
 
@@ -61,7 +61,7 @@ module "lambda" {
   vpc_security_group_ids = [var.lambda_security_group_id]
 
   # Attaching the lambda layers
-  layers = var.required_layer_arns
+  layers = [for layer_key in each.value.layers : var.available_layer_arns[layer_key]]
 }
 
 ###############################################################################

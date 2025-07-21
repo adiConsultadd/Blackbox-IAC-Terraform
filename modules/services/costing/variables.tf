@@ -16,11 +16,12 @@ variable "lambda_security_group_id" {
   description = "The ID of the shared Lambda security group"
 }
 
-variable "required_layer_arns" {
-  description = "A list of Lambda Layer ARNs to attach to the functions in this service."
-  type        = list(string)
-  default     = []
+variable "available_layer_arns" {
+  description = "A map of all available Lambda Layer ARNs, keyed by their short name."
+  type        = map(string)
+  default     = {}
 }
+
 
 variable "placeholder_s3_bucket" {
   type        = string

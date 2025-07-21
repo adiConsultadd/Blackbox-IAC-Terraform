@@ -29,18 +29,18 @@ module "drafting_lambda_role" {
 ###############################################################################
 locals {
   lambdas = {
-    "drafting-rfp-cost-summary"   = {}
-    "drafting-company-data"       = {}
-    "drafting-content-regeneration" = {}
-    "drafting-executive-summary" = {}
-    "drafting-extract-text"       = {}
-    "drafting-section-content"    = {}
-    "drafting-summary"            = {}
-    "drafting-system-summary"     = {}
-    "drafting-table-of-content"   = {}
-    "drafting-toc-enrichment"     = {}
-    "drafting-user-preference"    = {}
-    "drafting-toc-regenerate"     = {}
+    "drafting-rfp-cost-summary"   = { layers = ["common", "openai"] }
+    "drafting-company-data"       = { layers = ["common"] }
+    "drafting-content-regeneration" = { layers = ["common", "google"] }
+    "drafting-executive-summary"  = { layers = ["common", "openai"] }
+    "drafting-extract-text"       = { layers = ["common"] }
+    "drafting-section-content"    = { layers = ["common", "google"] }
+    "drafting-summary"            = { layers = ["common", "openai"] }
+    "drafting-system-summary"     = { layers = ["common", "openai"] }
+    "drafting-table-of-content"   = { layers = ["common", "google"] }
+    "drafting-toc-enrichment"     = { layers = ["common", "google"] }
+    "drafting-user-preference"    = { layers = ["common"] }
+    "drafting-toc-regenerate"     = { layers = ["common", "google"] }
   }
 }
 
@@ -67,7 +67,7 @@ module "lambda" {
   vpc_security_group_ids = [var.lambda_security_group_id]
 
   # Attaching the lambda layers
-  layers = var.required_layer_arns
+  layers = [for layer_key in each.value.layers : var.available_layer_arns[layer_key]]
 }
 
 ###############################################################################

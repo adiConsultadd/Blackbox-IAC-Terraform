@@ -60,14 +60,21 @@ module "sourcing_lambda_role" {
 ###############################################################################
 locals {
   lambdas = {
-    # These keys now match your Python filenames after transformation
-    "sourcing-rfp-sourcing-web"                 = {env = { S3_BUCKET_NAME = module.s3.bucket_name }}
-    "sourcing-rfp-details-db-ingestion"         = {env = { DB_ENDPOINT = var.db_endpoint }}
-    "sourcing-rfp-documents-s3-url-db-ingestion" = {env = {
-        S3_BUCKET_NAME    = module.s3.bucket_name
-        DB_ENDPOINT       = var.db_endpoint
-        CLOUDFRONT_DISTRO = module.cloudfront.distribution_id
-      }
+    "sourcing-rfp-sourcing-web"                 = {
+        layers = [], 
+        env = { S3_BUCKET_NAME = module.s3.bucket_name }
+    }
+    "sourcing-rfp-details-db-ingestion"         = {
+        layers = [], 
+        env = { DB_ENDPOINT = var.db_endpoint }
+    }
+    "sourcing-rfp-documents-s3-url-db-ingestion" = {
+        layers = [], 
+        env = {
+          S3_BUCKET_NAME    = module.s3.bucket_name
+          DB_ENDPOINT       = var.db_endpoint
+          CLOUDFRONT_DISTRO = module.cloudfront.distribution_id
+        }
     }
   }
 }
@@ -99,7 +106,7 @@ module "lambda" {
   vpc_security_group_ids = [var.lambda_security_group_id]
 
   # Attaching required layers
-  layers = var.required_layer_arns
+  layers = [for layer_key in each.value.layers : var.available_layer_arns[layer_key]]
 }
 
 ###############################################################################

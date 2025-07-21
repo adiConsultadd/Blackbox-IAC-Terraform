@@ -207,9 +207,7 @@ module "sourcing" {
   placeholder_source_code_hash = aws_s3_object.placeholder.etag
 
   # Lambda Layers
-  required_layer_arns = [
-    module.layers.layer_arns["common"],
-  ]
+  available_layer_arns = module.layers.layer_arns
 
 }
 
@@ -234,11 +232,7 @@ module "drafting" {
   placeholder_source_code_hash = aws_s3_object.placeholder.etag
 
   # Lambda Layers
-  required_layer_arns = [
-    module.layers.layer_arns["common"],
-    module.layers.layer_arns["google"],
-    module.layers.layer_arns["openai"],
-  ]
+  available_layer_arns = module.layers.layer_arns
 }
 
 #############################################################
@@ -262,11 +256,7 @@ module "costing" {
   placeholder_source_code_hash = aws_s3_object.placeholder.etag
 
   # Lambda Layers
-  required_layer_arns = [
-    module.layers.layer_arns["common"],
-    module.layers.layer_arns["google"],
-    module.layers.layer_arns["openai"],
-  ]
+  available_layer_arns = module.layers.layer_arns
 }
 
 #############################################################
