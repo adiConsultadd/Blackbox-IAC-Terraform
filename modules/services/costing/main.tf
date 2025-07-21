@@ -88,8 +88,8 @@ resource "aws_lambda_function" "costing_hourly_wages_ecr" {
   package_type = "Image"
   image_uri    = "${aws_ecr_repository.hourly_wages_repo.repository_url}:latest"
 
-  timeout     = 30
-  memory_size = 512 
+  timeout     = var.lambda_configs["costing-hourly-wages"].timeout
+  memory_size = var.lambda_configs["costing-hourly-wages"].memory_size
 
   vpc_config {
     subnet_ids         = var.private_subnet_ids

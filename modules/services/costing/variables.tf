@@ -24,7 +24,7 @@ variable "lambda_configs" {
   type = map(object({
     timeout     = number
     memory_size = number
-    runtime     = optional(string)
+    runtime     = string
   }))
   default = {}
 }
