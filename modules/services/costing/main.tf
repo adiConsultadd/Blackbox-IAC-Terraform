@@ -72,8 +72,6 @@ resource "aws_lambda_function" "costing_hourly_wages_ecr" {
   function_name = "${var.project_name}-${var.environment}-costing-hourly-wages"
   role          = module.costing_lambda_role.role_arn
   package_type  = "Image"
-  image_uri     = "${aws_ecr_repository.hourly_wages_repo.repository_url}:latest"
-
   timeout     = var.lambdas["costing-hourly-wages"].timeout
   memory_size = var.lambdas["costing-hourly-wages"].memory_size
 
