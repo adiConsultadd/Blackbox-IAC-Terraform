@@ -54,24 +54,35 @@ module "lambda" {
 ###############################################################################
 resource "aws_ecr_repository" "hourly_wages_repo" {
   name                 = "${var.project_name}-${var.environment}-costing-hourly-wages"
-  image_tag_mutability = "MUTABLE" 
+  image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
     scan_on_push = true
   }
+}
 
-  tags = {
-    Project     = var.project_name
-    Environment = var.environment
+# Step A: Build the placeholder image locally using the Docker provider
+resource "docker_image" "hourly_wages_placeholder" {
+  name = "${aws_ecr_repository.hourly_wages_repo.repository_url}:placeholder"
+  build {
+    context = "${path.module}/placeholder-image"
+    platform = "linux/amd64" # Specify architecture for compatibility
   }
 }
 
+# Step B: Push the placeholder image to your ECR repository
+resource "docker_registry_image" "hourly_wages_placeholder" {
+  name = docker_image.hourly_wages_placeholder.name
+}
+
+# Step C: Define the Lambda function, now pointing to the placeholder image that exists in your ECR
 resource "aws_lambda_function" "costing_hourly_wages_ecr" {
-  count = lookup(var.lambdas, "costing-hourly-wages", null) != null ? 1 : 0
-  
+  count         = lookup(var.lambdas, "costing-hourly-wages", null) != null ? 1 : 0
   function_name = "${var.project_name}-${var.environment}-costing-hourly-wages"
   role          = module.costing_lambda_role.role_arn
   package_type  = "Image"
+  image_uri     = docker_registry_image.hourly_wages_placeholder.name
+
   timeout     = var.lambdas["costing-hourly-wages"].timeout
   memory_size = var.lambdas["costing-hourly-wages"].memory_size
 
@@ -79,13 +90,9 @@ resource "aws_lambda_function" "costing_hourly_wages_ecr" {
     subnet_ids         = var.private_subnet_ids
     security_group_ids = [var.lambda_security_group_id]
   }
+
   lifecycle {
     ignore_changes = [image_uri]
-  }
-
-  tags = {
-    Project     = var.project_name
-    Environment = var.environment
   }
 }
 
