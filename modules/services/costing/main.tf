@@ -36,8 +36,10 @@ module "lambda" {
   timeout       = each.value.timeout
   memory_size   = each.value.memory_size
   layers        = [for layer_key in each.value.layers : var.available_layer_arns[layer_key]]
-  environment_variables = each.value.env_vars
-
+  environment_variables = merge(
+    each.value.env_vars,
+    { SSM_PREFIX = "blackbox-${var.environment}" }
+  )
   # Standard parameters
   s3_bucket        = var.placeholder_s3_bucket
   s3_key           = var.placeholder_s3_key
@@ -85,7 +87,11 @@ resource "aws_lambda_function" "costing_hourly_wages_ecr" {
 
   timeout     = var.lambdas["costing-hourly-wages"].timeout
   memory_size = var.lambdas["costing-hourly-wages"].memory_size
-
+  environment {
+    variables = {
+      SSM_PREFIX = "blackbox-${var.environment}"
+    }
+  }
   vpc_config {
     subnet_ids         = var.private_subnet_ids
     security_group_ids = [var.lambda_security_group_id]

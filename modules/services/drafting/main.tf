@@ -39,7 +39,10 @@ module "lambda" {
   timeout       = each.value.timeout
   memory_size   = each.value.memory_size
   layers        = [for layer_key in each.value.layers : var.available_layer_arns[layer_key]]
-  environment_variables = each.value.env_vars
+  environment_variables = merge(
+    each.value.env_vars,
+    {SSM_PREFIX = "blackbox-${var.environment}"}
+  )
 
   # Standard parameters
   s3_bucket        = var.placeholder_s3_bucket
