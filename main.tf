@@ -97,6 +97,15 @@ resource "aws_iam_policy" "ec2_policy" {
           aws_s3_bucket.lambda_artifacts.arn,
           "${aws_s3_bucket.lambda_artifacts.arn}/*"
         ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParametersByPath"
+        ],
+        Resource = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/*"
       }
     ]
   })
