@@ -16,17 +16,41 @@ module "cloudfront" {
   environment            = var.environment
   project_name           = var.project_name
   s3_bucket_name         = module.s3.bucket_name
+  s3_bucket_regional_domain_name = module.s3.bucket_regional_domain_name
   price_class            = var.cloudfront_price_class
   viewer_protocol_policy = var.viewer_protocol_policy
   default_root_object    = var.default_root_object
   enabled                = var.cloudfront_enabled
 }
 
+data "aws_iam_policy_document" "s3_policy" {
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = ["${module.s3.bucket_arn}/*"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "AWS:SourceArn"
+      values   = [module.cloudfront.distribution_arn]
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "this" {
+  bucket = module.s3.bucket_name
+  policy = data.aws_iam_policy_document.s3_policy.json
+}
+
 ###############################################################################
 # 3. IAM Role (Whole Service)
 ###############################################################################
 locals {
-  bucket_arn   = "arn:aws:s3:::${module.s3.bucket_name}"
+  bucket_arn   = module.s3.bucket_arn
   bucket_objects = "${local.bucket_arn}/*"
   project_lambda = "arn:aws:lambda:*:*:function:${var.project_name}-${var.environment}-lambda_*"
 

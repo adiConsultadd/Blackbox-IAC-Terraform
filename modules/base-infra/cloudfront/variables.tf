@@ -13,6 +13,11 @@ variable "s3_bucket_name" {
   description = "Bucket to serve from CloudFront"
 }
 
+variable "s3_bucket_regional_domain_name" {
+  type        = string
+  description = "The regional domain name of the S3 bucket origin"
+}
+
 variable "price_class" {
   type        = string
   description = "CloudFront price class"
