@@ -68,3 +68,59 @@ variable "ssh_access_cidr" {
   type        = string
   description = "CIDR block for SSH access to the EC2 instance"
 }
+
+# ---------- Static SSM Parameters ----------
+variable "google_api_key" {
+  description = "Google API Key"
+  type        = string
+  sensitive   = true
+}
+
+variable "openai_api_key" {
+  description = "OpenAI API Key"
+  type        = string
+  sensitive   = true
+}
+
+# ---------- HigherGov Static SSM Parameters ----------
+variable "highergov_apibaseurl" {
+  description = "HigherGov API base URL"
+  type        = string
+}
+
+variable "highergov_apidocurl" {
+  description = "HigherGov API documentation URL"
+  type        = string
+}
+
+variable "highergov_apikey" {
+  description = "HigherGov API Key"
+  type        = string
+  sensitive   = true
+}
+
+variable "highergov_email" {
+  description = "HigherGov login email"
+  type        = string
+}
+
+variable "highergov_loginurl" {
+  description = "HigherGov login URL"
+  type        = string
+}
+
+variable "highergov_password" {
+  description = "HigherGov login password"
+  type        = string
+  sensitive   = true
+}
+
+variable "highergov_portalurl" {
+  description = "HigherGov portal URL"
+  type        = string
+}
+
+variable "search_id" {
+  description = "HigherGov search ID"
+  type        = string
+}

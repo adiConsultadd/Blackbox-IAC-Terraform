@@ -263,14 +263,29 @@ module "costing" {
 # 9. SSM Parameter Store
 #############################################################
 locals {
-  all_ssm_parameters = {
-    "/blackbox-${var.environment}/db-endpoint"    = { value = module.rds.db_endpoint, type = "String" }
-    "/blackbox-${var.environment}/db-password"    = { value = module.rds.db_password, type = "SecureString" }
-    "/blackbox-${var.environment}/db-port"        = { value = module.rds.db_port, type = "String" }
-    "/blackbox-${var.environment}/db-user"        = { value = module.rds.db_username, type = "String" }
-    "/blackbox-${var.environment}/redis-endpoint" = { value = module.elasticache.endpoint, type = "String" }
+  static_parameters = {
+    "/blackbox-${var.environment}/google-api-key"          = { value = var.google_api_key, type = "SecureString" },
+    "/blackbox-${var.environment}/openai-api-key"          = { value = var.openai_api_key, type = "SecureString" },
+    "/blackbox-${var.environment}/highergov-api-base-url"  = { value = var.highergov_apibaseurl, type = "String" },
+    "/blackbox-${var.environment}/highergov-api-doc-url"   = { value = var.highergov_apidocurl, type = "String" },
+    "/blackbox-${var.environment}/highergov-api-key"       = { value = var.highergov_apikey, type = "SecureString" },
+    "/blackbox-${var.environment}/highergov-email"         = { value = var.highergov_email, type = "String" },
+    "/blackbox-${var.environment}/highergov-login-url"     = { value = var.highergov_loginurl, type = "String" },
+    "/blackbox-${var.environment}/highergov-password"      = { value = var.highergov_password, type = "SecureString" },
+    "/blackbox-${var.environment}/highergov-portal-url"    = { value = var.highergov_portalurl, type = "String" },
+    "/blackbox-${var.environment}/highergov-search-id"     = { value = var.search_id, type = "String" }
+    }
+
+  infra_parameters = {
+    "/blackbox-${var.environment}/db-endpoint"    = { value = module.rds.db_endpoint, type = "String" },
+    "/blackbox-${var.environment}/db-password"    = { value = module.rds.db_password, type = "SecureString" },
+    "/blackbox-${var.environment}/db-port"        = { value = module.rds.db_port, type = "String" },
+    "/blackbox-${var.environment}/db-user"        = { value = module.rds.db_username, type = "String" },
+    "/blackbox-${var.environment}/redis-endpoint" = { value = module.elasticache.endpoint, type = "String" },
     "/blackbox-${var.environment}/cloudfront-url" = { value = module.sourcing.cloudfront_domain, type = "String" }
   }
+
+  all_ssm_parameters = merge(local.static_parameters, local.infra_parameters)
 }
 
 resource "aws_ssm_parameter" "app_config" {
