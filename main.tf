@@ -290,7 +290,7 @@ locals {
     "/blackbox-${var.environment}/db-password"    = { value = module.rds.db_password, type = "SecureString" },
     "/blackbox-${var.environment}/db-port"        = { value = module.rds.db_port, type = "String" },
     "/blackbox-${var.environment}/db-user"        = { value = module.rds.db_username, type = "String" },
-    "/blackbox-${var.environment}/redis-endpoint" = { value = module.elasticache.endpoint, type = "String" },
+    "/blackbox-${var.environment}/redis-endpoint" = { value = "${module.elasticache.endpoint}:${module.elasticache.port}", type = "String" },
     "/blackbox-${var.environment}/cloudfront-url" = { value = module.sourcing.cloudfront_domain, type = "String" }
   }
 

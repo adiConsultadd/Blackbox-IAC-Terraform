@@ -10,7 +10,9 @@ locals {
     # ElastiCache Serverless permissions - Allows connection to ANY cache
     { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
     # RDS DB permissions - Allows connection to ANY database
-    { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
+    { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" },
+    # Full SSM Permissions
+    { Effect = "Allow", Action = ["ssm:*"], Resource = "*" }
   ]
 }
 

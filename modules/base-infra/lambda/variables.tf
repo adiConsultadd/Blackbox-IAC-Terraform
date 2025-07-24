@@ -30,7 +30,7 @@ variable "runtime" {
 
 variable "handler" {
   type    = string
-  default = "lambda_function.handler"
+  default = "lambda_function.lambda_handler"
 }
 
 variable "timeout" {
