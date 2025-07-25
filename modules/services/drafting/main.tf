@@ -77,6 +77,7 @@ module "drafting_state_machine" {
   project_name       = var.project_name
   environment        = var.environment
   state_machine_name = "drafting-workflow"
+  state_machine_type = "STANDARD"
   definition = templatefile("${path.module}/state-machine.tftpl", {
     rfp_cost_summary_lambda_arn = module.lambda["drafting-rfp-cost-summary"].lambda_arn
     summary_lambda_arn          = module.lambda["drafting-summary"].lambda_arn

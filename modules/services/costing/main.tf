@@ -140,6 +140,7 @@ module "costing_state_machine_1" {
   project_name       = var.project_name
   environment        = var.environment
   state_machine_name = "costing-workflow-1"
+  state_machine_type = "STANDARD"
   definition = templatefile("${path.module}/state-machine-1.tftpl", {
     rfp_infrastructure_lambda_arn  = module.lambda["costing-rfp-infrastructure"].lambda_arn
     rfp_license_lambda_arn         = module.lambda["costing-rfp-license"].lambda_arn
@@ -154,6 +155,7 @@ module "costing_state_machine_2" {
   project_name       = var.project_name
   environment        = var.environment
   state_machine_name = "costing-workflow-2"
+  state_machine_type = "EXPRESS"
   definition = templatefile("${path.module}/state-machine-2.tftpl", {
     rfp_cost_image_extractor_lambda_arn   = module.lambda["costing-rfp-cost-image-extractor"].lambda_arn
     rfp_cost_image_calculation_lambda_arn = module.lambda["costing-rfp-cost-image-calculation"].lambda_arn
