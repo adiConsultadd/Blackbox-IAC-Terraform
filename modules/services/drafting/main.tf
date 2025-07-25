@@ -18,7 +18,12 @@ locals {
     # Lambda Invoke Permissions
     { Effect = "Allow", Action = ["lambda:InvokeFunction"], Resource = ["*"] },
     # Step Function Invoke Permissions
-    { Effect = "Allow", Action = ["states:StartExecution"], Resource = ["*"] }
+    { Effect = "Allow", Action = ["states:StartExecution"], Resource = ["*"] },
+    {
+      Effect   = "Allow",
+      Action   = ["states:DescribeExecution", "states:GetExecutionHistory", "states:StopExecution"],
+      Resource = ["*"]
+    }
   ]
 }
 
