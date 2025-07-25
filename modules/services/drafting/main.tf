@@ -12,7 +12,13 @@ locals {
     # RDS DB permissions - Allows connection to ANY database
     { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" },
     # Full SSM Permissions
-    { Effect = "Allow", Action = ["ssm:*"], Resource = "*" }
+    { Effect = "Allow", Action = ["ssm:*"], Resource = "*" },
+    # S3 Full Access
+    { Effect = "Allow", Action = ["s3:*"], Resource = ["*"] },
+    # Lambda Invoke Permissions
+    { Effect = "Allow", Action = ["lambda:InvokeFunction"], Resource = ["*"] },
+    # Step Function Invoke Permissions
+    { Effect = "Allow", Action = ["states:StartExecution"], Resource = ["*"] }
   ]
 }
 

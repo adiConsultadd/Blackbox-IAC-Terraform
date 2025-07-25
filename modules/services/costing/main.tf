@@ -10,7 +10,13 @@ locals {
     # ElastiCache Serverless permissions - Allows connection to ANY cache
     { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
     # RDS DB permissions - Allows connection to ANY database
-    { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" }
+    { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" },
+    # S3 Full Access
+    { Effect = "Allow", Action = ["s3:*"], Resource = ["*"] },
+    # Lambda Invoke Permissions
+    { Effect = "Allow", Action = ["lambda:InvokeFunction"], Resource = ["*"] },
+    # Step Function Invoke Permissions
+    { Effect = "Allow", Action = ["states:StartExecution"], Resource = ["*"] }
   ]
 }
 module "costing_lambda_role" {

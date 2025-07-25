@@ -56,19 +56,19 @@ locals {
 
   # Define the combined policy statements once
   service_policy_statements = [
-    # General Permissions
-    { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-    # VPC Permissions (Required for Lambdas in a VPC)
-    { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
-    # S3 Permissions (from lambda-1 and lambda-3)
-    { Effect = "Allow", Action = ["s3:PutObject", "s3:GetObject", "s3:DeleteObject", "s3:ListBucket"], Resource = [local.bucket_arn, local.bucket_objects] },
-    # Lambda Invoke Permissions (from lambda-1)
-    { Effect = "Allow", Action = ["lambda:InvokeFunction"], Resource = [local.project_lambda] },
-    # RDS Permissions (from lambda-2 and lambda-3)
-    { Effect = "Allow", Action = ["rds-data:*", "rds-db:connect", "rds:DescribeDBInstances"], Resource = ["*"] },
-    # CloudFront Invalidation Permissions (from lambda-3)
-    { Effect = "Allow", Action = ["cloudfront:CreateInvalidation"], Resource = ["*"] }
-  ]
+     # General Permissions
+     { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
+     # VPC Permissions (Required for Lambdas in a VPC)
+     { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
+     # S3 Full Access
+     { Effect = "Allow", Action = ["s3:*"], Resource = ["*"] },
+     # Lambda Invoke Permissions
+     { Effect = "Allow", Action = ["lambda:InvokeFunction"], Resource = [local.project_lambda] },
+     # RDS Permissions
+     { Effect = "Allow", Action = ["rds-data:*", "rds-db:connect", "rds:DescribeDBInstances"], Resource = ["*"] },
+     # CloudFront Invalidation Permissions
+     { Effect = "Allow", Action = ["cloudfront:CreateInvalidation"], Resource = ["*"] }
+   ]
 }
 module "sourcing_lambda_role" {
   source = "../../base-infra/iam-lambda"
