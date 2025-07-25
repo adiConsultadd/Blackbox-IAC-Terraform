@@ -2,7 +2,7 @@
 # 1. IAM Role (Whole Service)
 ###############################################################################
 locals {
-  service_policy_statements = [
+service_policy_statements = [
     # CloudWatch Logs permissions
     { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
     # VPC permissions for Lambda to operate within a VPC
@@ -11,10 +11,6 @@ locals {
     { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
     # RDS DB permissions - Allows connection to ANY database
     { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" },
-    # RDS DB permissions - Allows connection to ANY database
-    { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" },
-    # Full SSM Permissions
-    { Effect = "Allow", Action = ["ssm:*"], Resource = "*" },
     # S3 Full Access
     { Effect = "Allow", Action = ["s3:*"], Resource = ["*"] },
     # Lambda Invoke Permissions
@@ -25,6 +21,20 @@ locals {
       Effect   = "Allow",
       Action   = ["states:DescribeExecution", "states:GetExecutionHistory", "states:StopExecution"],
       Resource = ["*"]
+    },
+    {
+      Effect = "Allow",
+      Action = [
+        "ssm:GetParameter",
+        "ssm:GetParameters",
+        "ssm:GetParametersByPath"
+      ],
+      Resource = "*"
+    },
+    {
+      Effect   = "Allow",
+      Action   = "kms:Decrypt",
+      Resource = "*" 
     }
   ]
 }

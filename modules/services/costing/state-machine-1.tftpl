@@ -1,5 +1,5 @@
 {
-  "Comment": "Run infra, license, and wages branches in parallel, then succeed",
+  "Comment": "Run infra, license, and wages branches in parallel with error handling.",
   "StartAt": "AllCostBranches",
   "States": {
     "AllCostBranches": {
@@ -109,10 +109,22 @@
           }
         }
       ],
-      "Next": "Success"
+      "Next": "CostCompleted",
+      "Catch": [
+        {
+          "ErrorEquals": ["States.ALL"],
+          "Comment": "Catch any error from the parallel branches",
+          "Next": "ExecutionFailed"
+        }
+      ]
     },
-    "Success": {
+    "CostCompleted": {
       "Type": "Succeed"
+    },
+    "ExecutionFailed": {
+      "Type": "Fail",
+      "Error": "ExecutionFailedError",
+      "Cause": "One of the parallel cost branches failed. Check the logs for details."
     }
   }
 }
