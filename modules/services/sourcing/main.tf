@@ -67,7 +67,24 @@ locals {
      # RDS Permissions
      { Effect = "Allow", Action = ["rds-data:*", "rds-db:connect", "rds:DescribeDBInstances"], Resource = ["*"] },
      # CloudFront Invalidation Permissions
-     { Effect = "Allow", Action = ["cloudfront:CreateInvalidation"], Resource = ["*"] }
+     { Effect = "Allow", Action = ["cloudfront:CreateInvalidation"], Resource = ["*"] },
+     # Full SSM Permissions
+     {
+      Effect = "Allow",
+      Action = [
+        "ssm:GetParameter",
+        "ssm:GetParameters",
+        "ssm:GetParametersByPath"
+      ],
+      Resource = "*"
+     },
+     {
+      Effect   = "Allow",
+      Action   = "kms:Decrypt",
+      Resource = "*" 
+     },
+     # Lambda Invoke Permissions
+    { Effect = "Allow", Action = ["lambda:InvokeFunction"], Resource = ["*"] },
    ]
 }
 module "sourcing_lambda_role" {
