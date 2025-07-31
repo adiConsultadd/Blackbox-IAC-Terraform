@@ -1,7 +1,7 @@
 resource "aws_cloudwatch_event_rule" "cron_daily" {
-  name                = "${var.project_name}-${var.environment}-${var.suffix}"
+  name                = "${var.project_name}-${var.suffix}-${var.environment}"
   schedule_expression = var.schedule_expression
- 
+
   tags = {
     Environment = var.environment
     Project     = var.project_name

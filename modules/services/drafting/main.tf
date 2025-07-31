@@ -31,7 +31,7 @@ locals {
 module "drafting_lambda_role" {
   source = "../../base-infra/iam-lambda"
 
-  role_name         = "${var.project_name}-${var.environment}-drafting-service-role"
+  role_name         = "${var.project_name}-drafting-service-role-${var.environment}"
   project_name      = var.project_name
   environment       = var.environment
   policy_statements = local.service_policy_statements
@@ -45,7 +45,7 @@ module "lambda" {
   for_each = var.lambdas
 
   source        = "../../base-infra/lambda"
-  function_name = "${var.project_name}-${var.environment}-${each.key}"
+  function_name = "${var.project_name}-${each.key}-${var.environment}"
 
   # Configuration from the .tfvars file
   runtime       = each.value.runtime
@@ -58,10 +58,10 @@ module "lambda" {
   )
 
   # Standard parameters
-  s3_bucket        = var.placeholder_s3_bucket
-  s3_key           = var.placeholder_s3_key
-  source_code_hash = var.placeholder_source_code_hash
-  lambda_role_arn  = module.drafting_lambda_role.role_arn
+  s3_bucket              = var.placeholder_s3_bucket
+  s3_key                 = var.placeholder_s3_key
+  source_code_hash       = var.placeholder_source_code_hash
+  lambda_role_arn        = module.drafting_lambda_role.role_arn
 
   # VPC configuration
   vpc_subnet_ids         = var.private_subnet_ids

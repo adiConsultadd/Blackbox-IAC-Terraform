@@ -49,7 +49,7 @@ module "elasticache" {
 # 4. Shared EC2 Instance & IAM Role
 #############################################################
 resource "aws_iam_role" "ec2_role" {
-  name = "${var.project_name}-${var.environment}-ec2-role"
+  name = "${var.project_name}-ec2-role-${var.environment}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -71,7 +71,7 @@ resource "aws_iam_role" "ec2_role" {
 }
 
 resource "aws_iam_policy" "ec2_policy" {
-  name        = "${var.project_name}-${var.environment}-ec2-policy"
+  name        = "${var.project_name}-ec2-policy-${var.environment}"
   description = "Policy for EC2 to invoke Lambda and access project S3 buckets."
 
   policy = jsonencode({
@@ -80,7 +80,7 @@ resource "aws_iam_policy" "ec2_policy" {
       {
         Action   = "lambda:InvokeFunction"
         Effect   = "Allow"
-        Resource = "arn:aws:lambda:${var.aws_region}:${data.aws_caller_identity.current.account_id}:function:${var.project_name}-${var.environment}-*"
+        Resource = "arn:aws:lambda:${var.aws_region}:${data.aws_caller_identity.current.account_id}:function:${var.project_name}-*-${var.environment}"
       },
       {
         Action = [
@@ -91,9 +91,8 @@ resource "aws_iam_policy" "ec2_policy" {
         ]
         Effect   = "Allow"
         Resource = [
-          "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-rfp-files",
-          "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-rfp-files/*",
-          # Add access to the new lambda artifacts bucket
+          "arn:aws:s3:::${var.project_name}-sourcing-rfp-files-${var.environment}",
+          "arn:aws:s3:::${var.project_name}-sourcing-rfp-files-${var.environment}/*",
           aws_s3_bucket.lambda_artifacts.arn,
           "${aws_s3_bucket.lambda_artifacts.arn}/*"
         ]
@@ -117,7 +116,7 @@ resource "aws_iam_role_policy_attachment" "ec2_policy_attach" {
 }
 
 resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "${var.project_name}-${var.environment}-ec2-profile"
+  name = "${var.project_name}-ec2-profile-${var.environment}"
   role = aws_iam_role.ec2_role.name
 }
 
@@ -142,7 +141,7 @@ module "ec2" {
 # 5. Lambda Artifacts Bucket and Placeholder Code
 #############################################################
 resource "aws_s3_bucket" "lambda_artifacts" {
-  bucket = "${var.project_name}-${var.environment}-lambda-artifacts"
+  bucket = "${var.project_name}-lambda-artifacts-${var.environment}"
 }
 
 resource "aws_s3_bucket_versioning" "lambda_artifacts_versioning" {
@@ -194,7 +193,7 @@ module "sourcing" {
   # Global Vars
   environment  = var.environment
   project_name = var.project_name
-  lambdas        = lookup(var.services_lambdas, "sourcing", {})
+  lambdas      = lookup(var.services_lambdas, "sourcing", {})
 
   # Pass in shared infrastructure details
   private_subnet_ids       = module.networking.private_subnet_ids
@@ -229,7 +228,7 @@ module "drafting" {
   # Global Vars
   environment  = var.environment
   project_name = var.project_name
-  lambdas        = lookup(var.services_lambdas, "drafting", {})
+  lambdas      = lookup(var.services_lambdas, "drafting", {})
 
   # Pass in shared infrastructure details
   private_subnet_ids       = module.networking.private_subnet_ids
@@ -253,7 +252,7 @@ module "costing" {
   # Global Vars
   environment  = var.environment
   project_name = var.project_name
-  lambdas        = lookup(var.services_lambdas, "costing", {})
+  lambdas      = lookup(var.services_lambdas, "costing", {})
 
   # Pass in shared infrastructure details
   private_subnet_ids       = module.networking.private_subnet_ids

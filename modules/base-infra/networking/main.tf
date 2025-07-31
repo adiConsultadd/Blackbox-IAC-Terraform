@@ -5,7 +5,7 @@ resource "aws_vpc" "this" {
   enable_dns_hostnames = true
 
   tags = {
-    Name        = "${var.project_name}-${var.environment}-vpc"
+    Name        = "${var.project_name}-vpc-${var.environment}"
     Environment = var.environment
     Project     = var.project_name
   }
@@ -19,7 +19,7 @@ resource "aws_subnet" "public" {
   availability_zone = var.availability_zones[each.key]
 
   tags = {
-    Name        = "${var.project_name}-${var.environment}-public-subnet-${each.key + 1}"
+    Name        = "${var.project_name}-public-subnet-${each.key + 1}-${var.environment}"
     Environment = var.environment
     Project     = var.project_name
   }
@@ -32,7 +32,7 @@ resource "aws_subnet" "private" {
   availability_zone = var.availability_zones[each.key]
 
   tags = {
-    Name        = "${var.project_name}-${var.environment}-private-subnet-${each.key + 1}"
+    Name        = "${var.project_name}-private-subnet-${each.key + 1}-${var.environment}"
     Environment = var.environment
     Project     = var.project_name
   }
@@ -43,7 +43,7 @@ resource "aws_internet_gateway" "this" {
   vpc_id = aws_vpc.this.id
 
   tags = {
-    Name        = "${var.project_name}-${var.environment}-igw"
+    Name        = "${var.project_name}-igw-${var.environment}"
     Environment = var.environment
     Project     = var.project_name
   }
@@ -55,7 +55,7 @@ resource "aws_eip" "nat" {
   depends_on = [aws_internet_gateway.this]
 
   tags = {
-    Name        = "${var.project_name}-${var.environment}-nat-eip"
+    Name        = "${var.project_name}-nat-eip-${var.environment}"
     Environment = var.environment
     Project     = var.project_name
   }
@@ -66,7 +66,7 @@ resource "aws_nat_gateway" "this" {
   subnet_id     = values(aws_subnet.public)[0].id # Place NAT in the first public subnet
 
   tags = {
-    Name        = "${var.project_name}-${var.environment}-nat-gw"
+    Name        = "${var.project_name}-nat-gw-${var.environment}"
     Environment = var.environment
     Project     = var.project_name
   }
@@ -82,7 +82,7 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name        = "${var.project_name}-${var.environment}-public-rt"
+    Name        = "${var.project_name}-public-rt-${var.environment}"
     Environment = var.environment
     Project     = var.project_name
   }
@@ -103,7 +103,7 @@ resource "aws_route_table" "private" {
   }
 
   tags = {
-    Name        = "${var.project_name}-${var.environment}-private-rt"
+    Name        = "${var.project_name}-private-rt-${var.environment}"
     Environment = var.environment
     Project     = var.project_name
   }
@@ -117,7 +117,7 @@ resource "aws_route_table_association" "private" {
 
 # 6. Security Groups
 resource "aws_security_group" "ec2" {
-  name        = "${var.project_name}-${var.environment}-ec2-sg"
+  name        = "${var.project_name}-ec2-sg-${var.environment}"
   description = "Allow SSH and HTTP inbound traffic and all outbound"
   vpc_id      = aws_vpc.this.id
 
@@ -153,38 +153,38 @@ resource "aws_security_group" "ec2" {
   }
 
   tags = {
-    Name        = "${var.project_name}-${var.environment}-ec2-sg"
+    Name        = "${var.project_name}-ec2-sg-${var.environment}"
     Environment = var.environment
     Project     = var.project_name
   }
 }
 
 resource "aws_security_group" "rds" {
-  name        = "${var.project_name}-${var.environment}-rds-sg"
+  name        = "${var.project_name}-rds-sg-${var.environment}"
   description = "Allow traffic from Lambda and EC2 to RDS"
   vpc_id      = aws_vpc.this.id
 
   tags = {
-    Name        = "${var.project_name}-${var.environment}-rds-sg"
+    Name        = "${var.project_name}-rds-sg-${var.environment}"
     Environment = var.environment
     Project     = var.project_name
   }
 }
 
 resource "aws_security_group" "elasticache" {
-  name        = "${var.project_name}-${var.environment}-elasticache-sg"
+  name        = "${var.project_name}-elasticache-sg-${var.environment}"
   description = "Allow traffic from Lambda to ElastiCache"
   vpc_id      = aws_vpc.this.id
 
   tags = {
-    Name        = "${var.project_name}-${var.environment}-elasticache-sg"
+    Name        = "${var.project_name}-elasticache-sg-${var.environment}"
     Environment = var.environment
     Project     = var.project_name
   }
 }
 
 resource "aws_security_group" "lambda" {
-  name        = "${var.project_name}-${var.environment}-lambda-sg"
+  name        = "${var.project_name}-lambda-sg-${var.environment}"
   description = "Allow all outbound traffic for Lambda"
   vpc_id      = aws_vpc.this.id
 
@@ -196,7 +196,7 @@ resource "aws_security_group" "lambda" {
   }
 
   tags = {
-    Name        = "${var.project_name}-${var.environment}-lambda-sg"
+    Name        = "${var.project_name}-lambda-sg-${var.environment}"
     Environment = var.environment
     Project     = var.project_name
   }
@@ -204,7 +204,7 @@ resource "aws_security_group" "lambda" {
 
 resource "aws_security_group_rule" "allow_lambda_to_rds" {
   type                     = "ingress"
-  from_port                = 5432 
+  from_port                = 5432
   to_port                  = 5432
   protocol                 = "tcp"
   security_group_id        = aws_security_group.rds.id

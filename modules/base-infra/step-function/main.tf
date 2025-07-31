@@ -2,7 +2,7 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_iam_role" "step_function_role" {
-  name = "${var.project_name}-${var.environment}-${var.state_machine_name}-role"
+  name = "${var.project_name}-${var.state_machine_name}-role-${var.environment}"
 
   assume_role_policy = jsonencode({
     Version   = "2012-10-17",
@@ -27,7 +27,7 @@ resource "aws_iam_role" "step_function_role" {
 resource "aws_cloudwatch_log_group" "sfn_log_group" {
   count = var.state_machine_type == "EXPRESS" ? 1 : 0
 
-  name              = "/aws/vendedlogs/states/${var.project_name}-${var.environment}-${var.state_machine_name}"
+  name              = "/aws/vendedlogs/states/${var.project_name}-${var.state_machine_name}-${var.environment}"
   retention_in_days = 7
 
   tags = {
@@ -67,7 +67,7 @@ locals {
         "logs:DescribeResourcePolicies",
         "logs:DescribeLogGroups"
       ],
-      Resource = ["*"] 
+      Resource = ["*"]
     }
   ] : []
 
@@ -76,7 +76,7 @@ locals {
 }
 
 resource "aws_iam_role_policy" "step_function_policy" {
-  name = "${var.project_name}-${var.environment}-${var.state_machine_name}-policy"
+  name = "${var.project_name}-${var.state_machine_name}-policy-${var.environment}"
   role = aws_iam_role.step_function_role.id
 
   policy = jsonencode({
@@ -86,7 +86,7 @@ resource "aws_iam_role_policy" "step_function_policy" {
 }
 
 resource "aws_sfn_state_machine" "this" {
-  name       = "${var.project_name}-${var.environment}-${var.state_machine_name}"
+  name       = "${var.project_name}-${var.state_machine_name}-${var.environment}"
   role_arn   = aws_iam_role.step_function_role.arn
   definition = var.definition
   type       = var.state_machine_type # Use the new variable

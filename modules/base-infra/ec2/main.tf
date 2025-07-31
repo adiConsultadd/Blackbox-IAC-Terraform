@@ -8,7 +8,7 @@ resource "aws_instance" "this" {
   associate_public_ip_address = var.associate_public_ip_address
 
   tags = {
-    Name        = "${var.project_name}-${var.environment}-ec2-instance"
+    Name        = "${var.project_name}-ec2-${var.environment}"
     Environment = var.environment
     Project     = var.project_name
   }

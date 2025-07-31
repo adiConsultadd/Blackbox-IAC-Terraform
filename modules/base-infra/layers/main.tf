@@ -5,7 +5,7 @@ data "archive_file" "placeholder_layer" {
 }
 
 resource "aws_s3_bucket" "lambda_layers" {
-  bucket = "${var.project_name}-${var.environment}-lambda-layers"
+  bucket = "${var.project_name}-lambda-layers-${var.environment}"
 }
 
 resource "aws_s3_object" "placeholder_layer" {
@@ -15,11 +15,11 @@ resource "aws_s3_object" "placeholder_layer" {
   etag   = data.archive_file.placeholder_layer.output_md5
 }
 resource "aws_lambda_layer_version" "this" {
-  for_each            = var.layers
-  layer_name          = "${var.project_name}-${var.environment}-${each.key}"
-  s3_bucket           = aws_s3_bucket.lambda_layers.id
-  s3_key              = aws_s3_object.placeholder_layer.key
-  
+  for_each              = var.layers
+  layer_name            = "${var.project_name}-${each.key}-${var.environment}"
+  s3_bucket             = aws_s3_bucket.lambda_layers.id
+  s3_key                = aws_s3_object.placeholder_layer.key
+
   compatible_runtimes = each.value.compatible_runtimes
   lifecycle {
     ignore_changes = [

@@ -2,7 +2,7 @@
 # 1. IAM Role (Whole Service)
 ###############################################################################
 locals {
-service_policy_statements = [
+  service_policy_statements = [
     # CloudWatch Logs permissions
     { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
     # VPC permissions for Lambda to operate within a VPC
@@ -34,14 +34,14 @@ service_policy_statements = [
     {
       Effect   = "Allow",
       Action   = "kms:Decrypt",
-      Resource = "*" 
+      Resource = "*"
     }
   ]
 }
 module "costing_lambda_role" {
   source = "../../base-infra/iam-lambda"
 
-  role_name         = "${var.project_name}-${var.environment}-costing-service-role"
+  role_name         = "${var.project_name}-costing-service-role-${var.environment}"
   project_name      = var.project_name
   environment       = var.environment
   policy_statements = local.service_policy_statements
@@ -57,7 +57,7 @@ module "lambda" {
   }
 
   source        = "../../base-infra/lambda"
-  function_name = "${var.project_name}-${var.environment}-${each.key}"
+  function_name = "${var.project_name}-${each.key}-${var.environment}"
 
   # Configuration from the .tfvars file
   runtime       = each.value.runtime
@@ -69,10 +69,10 @@ module "lambda" {
     { SSM_PREFIX = "blackbox-${var.environment}" }
   )
   # Standard parameters
-  s3_bucket        = var.placeholder_s3_bucket
-  s3_key           = var.placeholder_s3_key
-  source_code_hash = var.placeholder_source_code_hash
-  lambda_role_arn  = module.costing_lambda_role.role_arn
+  s3_bucket              = var.placeholder_s3_bucket
+  s3_key                 = var.placeholder_s3_key
+  source_code_hash       = var.placeholder_source_code_hash
+  lambda_role_arn        = module.costing_lambda_role.role_arn
 
   # VPC configuration
   vpc_subnet_ids         = var.private_subnet_ids
@@ -83,7 +83,7 @@ module "lambda" {
 # 3. ECR-Based Lambda (Costing-Hourly-Wages)
 ###############################################################################
 resource "aws_ecr_repository" "hourly_wages_repo" {
-  name                 = "${var.project_name}-${var.environment}-costing-hourly-wages"
+  name                 = "${var.project_name}-costing-hourly-wages-${var.environment}"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
@@ -95,7 +95,7 @@ resource "aws_ecr_repository" "hourly_wages_repo" {
 resource "docker_image" "hourly_wages_placeholder" {
   name = "${aws_ecr_repository.hourly_wages_repo.repository_url}:placeholder"
   build {
-    context = "${path.module}/placeholder-image"
+    context  = "${path.module}/placeholder-image"
     platform = "linux/amd64" # Specify architecture for compatibility
   }
 }
@@ -108,7 +108,7 @@ resource "docker_registry_image" "hourly_wages_placeholder" {
 # Step C: Define the Lambda function, now pointing to the placeholder image that exists in your ECR
 resource "aws_lambda_function" "costing_hourly_wages_ecr" {
   count         = lookup(var.lambdas, "costing-hourly-wages", null) != null ? 1 : 0
-  function_name = "${var.project_name}-${var.environment}-costing-hourly-wages"
+  function_name = "${var.project_name}-costing-hourly-wages-${var.environment}"
   role          = module.costing_lambda_role.role_arn
   package_type  = "Image"
   image_uri     = docker_registry_image.hourly_wages_placeholder.name
@@ -164,23 +164,23 @@ module "costing_state_machine_2" {
 
 module "costing_cost_step_machine_lambda" {
   source        = "../../base-infra/lambda"
-  function_name = "${var.project_name}-${var.environment}-costing-cost-step-machine"
-  
+  function_name = "${var.project_name}-costing-cost-step-machine-${var.environment}"
+
   # Configuration is pulled directly from the variable for this specific lambda
   runtime     = var.lambdas["costing-cost-step-machine"].runtime
   timeout     = var.lambdas["costing-cost-step-machine"].timeout
   memory_size = var.lambdas["costing-cost-step-machine"].memory_size
   layers      = [for layer_key in var.lambdas["costing-cost-step-machine"].layers : var.available_layer_arns[layer_key]]
-  
+
   environment_variables = {
     STEP_FUNCTION_ARN = module.costing_state_machine_1.state_machine_arn
     SSM_PREFIX        = "blackbox-${var.environment}"
   }
 
-  lambda_role_arn  = module.costing_lambda_role.role_arn
-  s3_bucket        = var.placeholder_s3_bucket
-  s3_key           = var.placeholder_s3_key
-  source_code_hash = var.placeholder_source_code_hash
+  lambda_role_arn      = module.costing_lambda_role.role_arn
+  s3_bucket            = var.placeholder_s3_bucket
+  s3_key               = var.placeholder_s3_key
+  source_code_hash     = var.placeholder_source_code_hash
 
   vpc_subnet_ids         = var.private_subnet_ids
   vpc_security_group_ids = [var.lambda_security_group_id]

@@ -12,15 +12,15 @@ module "s3" {
 # 2. CloudFront (Serves content from this service's S3 bucket)
 ###############################################################################
 module "cloudfront" {
-  source                 = "../../base-infra/cloudfront"
-  environment            = var.environment
-  project_name           = var.project_name
-  s3_bucket_name         = module.s3.bucket_name
+  source                         = "../../base-infra/cloudfront"
+  environment                    = var.environment
+  project_name                   = var.project_name
+  s3_bucket_name                 = module.s3.bucket_name
   s3_bucket_regional_domain_name = module.s3.bucket_regional_domain_name
-  price_class            = var.cloudfront_price_class
-  viewer_protocol_policy = var.viewer_protocol_policy
-  default_root_object    = var.default_root_object
-  enabled                = var.cloudfront_enabled
+  price_class                    = var.cloudfront_price_class
+  viewer_protocol_policy         = var.viewer_protocol_policy
+  default_root_object            = var.default_root_object
+  enabled                        = var.cloudfront_enabled
 }
 
 data "aws_iam_policy_document" "s3_policy" {
@@ -50,26 +50,20 @@ resource "aws_s3_bucket_policy" "this" {
 # 3. IAM Role (Whole Service)
 ###############################################################################
 locals {
-  bucket_arn   = module.s3.bucket_arn
-  bucket_objects = "${local.bucket_arn}/*"
-  project_lambda = "arn:aws:lambda:*:*:function:${var.project_name}-${var.environment}-lambda_*"
-
   # Define the combined policy statements once
   service_policy_statements = [
-     # General Permissions
-     { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
-     # VPC Permissions (Required for Lambdas in a VPC)
-     { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
-     # S3 Full Access
-     { Effect = "Allow", Action = ["s3:*"], Resource = ["*"] },
-     # Lambda Invoke Permissions
-     { Effect = "Allow", Action = ["lambda:InvokeFunction"], Resource = [local.project_lambda] },
-     # RDS Permissions
-     { Effect = "Allow", Action = ["rds-data:*", "rds-db:connect", "rds:DescribeDBInstances"], Resource = ["*"] },
-     # CloudFront Invalidation Permissions
-     { Effect = "Allow", Action = ["cloudfront:CreateInvalidation"], Resource = ["*"] },
-     # Full SSM Permissions
-     {
+    # General Permissions
+    { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
+    # VPC Permissions (Required for Lambdas in a VPC)
+    { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
+    # S3 Full Access
+    { Effect = "Allow", Action = ["s3:*"], Resource = ["*"] },
+    # RDS Permissions
+    { Effect = "Allow", Action = ["rds-data:*", "rds-db:connect", "rds:DescribeDBInstances"], Resource = ["*"] },
+    # CloudFront Invalidation Permissions
+    { Effect = "Allow", Action = ["cloudfront:CreateInvalidation"], Resource = ["*"] },
+    # Full SSM Permissions
+    {
       Effect = "Allow",
       Action = [
         "ssm:GetParameter",
@@ -77,20 +71,20 @@ locals {
         "ssm:GetParametersByPath"
       ],
       Resource = "*"
-     },
-     {
+    },
+    {
       Effect   = "Allow",
       Action   = "kms:Decrypt",
-      Resource = "*" 
-     },
-     # Lambda Invoke Permissions
+      Resource = "*"
+    },
+    # Lambda Invoke Permissions
     { Effect = "Allow", Action = ["lambda:InvokeFunction"], Resource = ["*"] },
-   ]
+  ]
 }
 module "sourcing_lambda_role" {
   source = "../../base-infra/iam-lambda"
 
-  role_name         = "${var.project_name}-${var.environment}-sourcing-service-role"
+  role_name         = "${var.project_name}-sourcing-service-role-${var.environment}"
   project_name      = var.project_name
   environment       = var.environment
   policy_statements = local.service_policy_statements
@@ -102,20 +96,20 @@ module "sourcing_lambda_role" {
 locals {
   lambdas = {
     "sourcing-rfp-sourcing-web"                 = {
-        layers = [], 
-        env = { S3_BUCKET_NAME = module.s3.bucket_name }
+      layers = [],
+      env    = { S3_BUCKET_NAME = module.s3.bucket_name }
     }
     "sourcing-rfp-details-db-ingestion"         = {
-        layers = [], 
-        env = { DB_ENDPOINT = var.db_endpoint }
+      layers = [],
+      env    = { DB_ENDPOINT = var.db_endpoint }
     }
     "sourcing-rfp-documents-s3-url-db-ingestion" = {
-        layers = [], 
-        env = {
-          S3_BUCKET_NAME    = module.s3.bucket_name
-          DB_ENDPOINT       = var.db_endpoint
-          CLOUDFRONT_DISTRO = module.cloudfront.distribution_id
-        }
+      layers = [],
+      env = {
+        S3_BUCKET_NAME    = module.s3.bucket_name
+        DB_ENDPOINT       = var.db_endpoint
+        CLOUDFRONT_DISTRO = module.cloudfront.distribution_id
+      }
     }
   }
 }
@@ -128,7 +122,7 @@ module "lambda" {
   for_each = var.lambdas
 
   source        = "../../base-infra/lambda"
-  function_name = "${var.project_name}-${var.environment}-${each.key}"
+  function_name = "${var.project_name}-${each.key}-${var.environment}"
 
   # Configuration from the .tfvars file
   runtime       = each.value.runtime
@@ -140,10 +134,10 @@ module "lambda" {
     {SSM_PREFIX = "blackbox-${var.environment}"}
   )
   # Standard parameters
-  s3_bucket        = var.placeholder_s3_bucket
-  s3_key           = var.placeholder_s3_key
-  source_code_hash = var.placeholder_source_code_hash
-  lambda_role_arn  = module.sourcing_lambda_role.role_arn
+  s3_bucket              = var.placeholder_s3_bucket
+  s3_key                 = var.placeholder_s3_key
+  source_code_hash       = var.placeholder_source_code_hash
+  lambda_role_arn        = module.sourcing_lambda_role.role_arn
 
   # VPC configuration
   vpc_subnet_ids         = var.private_subnet_ids
@@ -154,10 +148,10 @@ module "lambda" {
 # 6. EventBridge (Schedules Lambda-1 of this service)
 ###############################################################################
 module "eventbridge" {
-  source    = "../../base-infra/eventbridge"
-  environment = var.environment
+  source       = "../../base-infra/eventbridge"
+  environment  = var.environment
   project_name = var.project_name
-  suffix    = "daily-trigger-sourcing-lambda-1"
+  suffix       = "daily-trigger-sourcing-lambda-1"
 
   lambda_arn_to_trigger = module.lambda["sourcing-rfp-sourcing-web"].lambda_arn
   schedule_expression   = var.eventbridge_schedule_expression
