@@ -330,7 +330,8 @@ locals {
     "/blackbox-${var.environment}/highergov-login-url"     = { value = var.highergov_loginurl, type = "String" },
     "/blackbox-${var.environment}/highergov-password"      = { value = var.highergov_password, type = "SecureString" },
     "/blackbox-${var.environment}/highergov-portal-url"    = { value = var.highergov_portalurl, type = "String" },
-    "/blackbox-${var.environment}/highergov-search-id"     = { value = var.search_id, type = "String" }
+    "/blackbox-${var.environment}/highergov-search-id"     = { value = var.search_id, type = "String" },
+    "/blackbox-${var.environment}/openai-webhook-secret"     = { value = var.openai-webhook-secret, type = "String" },
     }
 
   infra_parameters = {

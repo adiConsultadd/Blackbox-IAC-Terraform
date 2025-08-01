@@ -124,3 +124,8 @@ variable "search_id" {
   description = "HigherGov search ID"
   type        = string
 }
+
+variable "openai-webhook-secret" {
+  description = "HigherGov search ID"
+  type        = string
+}
