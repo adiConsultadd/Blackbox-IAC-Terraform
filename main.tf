@@ -292,9 +292,32 @@ module "deep_research" {
   available_layer_arns = module.layers.layer_arns
 }
 
+#############################################################
+# 10. Webhook Service
+#############################################################
+module "webhook" {
+  source = "./modules/services/webhook"
+
+  # Global Vars
+  environment  = var.environment
+  project_name = var.project_name
+  lambdas      = lookup(var.services_lambdas, "webhook", {})
+
+  # Pass in shared infrastructure details
+  private_subnet_ids       = module.networking.private_subnet_ids
+  lambda_security_group_id = module.networking.lambda_security_group_id
+
+  # Placeholder Lambda Artifacts
+  placeholder_s3_bucket        = aws_s3_bucket.lambda_artifacts.id
+  placeholder_s3_key           = aws_s3_object.placeholder.key
+  placeholder_source_code_hash = aws_s3_object.placeholder.etag
+
+  # Lambda Layers
+  available_layer_arns = module.layers.layer_arns
+}
 
 #############################################################
-# 10. SSM Parameter Store
+# 11. SSM Parameter Store
 #############################################################
 locals {
   static_parameters = {
