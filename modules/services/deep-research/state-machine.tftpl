@@ -1,0 +1,77 @@
+{
+  "Comment": "Run two Lambdas in parallel and fail if any fails",
+  "StartAt": "Parallel",
+  "States": {
+    "Parallel": {
+      "Type": "Parallel",
+      "Next": "deep-research-result",
+      "Branches": [
+        {
+          "StartAt": "blackbox_deep_research_prompt_lambda",
+          "States": {
+            "blackbox_deep_research_prompt_lambda": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${deep_research_prompt_lambda_arn}",
+                "Payload.$": "$"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2
+                }
+              ],
+              "Next": "blackbox_deep_research_lambda"
+            },
+            "blackbox_deep_research_lambda": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Parameters": {
+                "FunctionName": "${deep_research_lambda_arn}",
+                "Payload.$": "$"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2
+                }
+              ],
+              "End": true
+            }
+          }
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "ExecutionFailed"
+        }
+      ]
+    },
+    "deep-research-result": {
+      "Type": "Succeed"
+    },
+    "ExecutionFailed": {
+      "Type": "Fail",
+      "Error": "ExecutionFailedError",
+      "Cause": "One of the parallel branches failed. Check the logs for details."
+    }
+  }
+}

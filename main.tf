@@ -269,7 +269,32 @@ module "costing" {
 }
 
 #############################################################
-# 9. SSM Parameter Store
+# 9. Deep Research Service
+#############################################################
+module "deep_research" {
+  source = "./modules/services/deep-research"
+
+  # Global Vars
+  environment  = var.environment
+  project_name = var.project_name
+  lambdas      = lookup(var.services_lambdas, "deep-research", {})
+
+  # Pass in shared infrastructure details
+  private_subnet_ids       = module.networking.private_subnet_ids
+  lambda_security_group_id = module.networking.lambda_security_group_id
+
+  # Placeholder Lambda Artifacts from root
+  placeholder_s3_bucket        = aws_s3_bucket.lambda_artifacts.id
+  placeholder_s3_key           = aws_s3_object.placeholder.key
+  placeholder_source_code_hash = aws_s3_object.placeholder.etag
+
+  # Lambda Layers
+  available_layer_arns = module.layers.layer_arns
+}
+
+
+#############################################################
+# 10. SSM Parameter Store
 #############################################################
 locals {
   static_parameters = {
@@ -310,3 +335,4 @@ resource "aws_ssm_parameter" "app_config" {
     Project     = var.project_name
   }
 }
+

@@ -42,3 +42,8 @@ output "costing_lambda_arns" {
   description = "ARNs of the Lambda functions in the costing service"
   value       = module.costing.lambda_arns
 }
+
+output "deep_research_lambda_arns" {
+  description = "ARNs of the Lambda functions in the deep-research service"
+  value       = module.deep_research.lambda_arns
+}
