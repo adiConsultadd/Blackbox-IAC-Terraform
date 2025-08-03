@@ -52,6 +52,10 @@ variable "cloudfront_enabled" { type = bool }
 
 # ---- EventBridge ------------------------------------------
 variable "eventbridge_schedule_expression" { type = string }
+variable "data_migration_schedule_expression" {
+  description = "Cron expression for the data migration Lambda trigger."
+  type        = string
+}
 
 # ---- EC2 --------------------------------------------------
 variable "ec2_instance_type" {

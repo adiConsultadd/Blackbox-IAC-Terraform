@@ -47,3 +47,8 @@ output "deep_research_lambda_arns" {
   description = "ARNs of the Lambda functions in the deep-research service"
   value       = module.deep_research.lambda_arns
 }
+
+output "data_migration_lambda_arns" {
+  description = "ARNs of the Lambda functions in the data-migration service"
+  value       = module.data_migration.lambda_arns
+}
