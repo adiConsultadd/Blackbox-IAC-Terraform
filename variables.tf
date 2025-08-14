@@ -133,3 +133,20 @@ variable "openai-webhook-secret" {
   description = "HigherGov search ID"
   type        = string
 }
+
+# ---------- Elastic Static SSM Parameters ----------
+variable "apm_secret_token" {
+  description = "Elastic APM secret token"
+  type        = string
+  sensitive   = true
+}
+variable "apm_server_url" {
+  description = "Elastic APM server URL"
+  type        = string
+  sensitive   = true
+}
+variable "elastic_apm_api_key" {
+  description = "Elastic APM API key"
+  type        = string
+  sensitive   = true
+}
