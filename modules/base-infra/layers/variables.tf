@@ -11,7 +11,6 @@ variable "environment" {
 variable "layers" {
   description = "A map of Lambda layers to create"
   type = map(object({
-    source_path         = string
     compatible_runtimes = list(string)
   }))
 }

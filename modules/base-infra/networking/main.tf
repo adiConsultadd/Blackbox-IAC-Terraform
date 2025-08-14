@@ -137,6 +137,14 @@ resource "aws_security_group" "ec2" {
     description = "Allow HTTP inbound from anywhere"
   }
 
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow HTTPS inbound from anywhere"
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -222,4 +230,14 @@ resource "aws_security_group_rule" "allow_lambda_to_elasticache" {
   security_group_id        = aws_security_group.elasticache.id
   source_security_group_id = aws_security_group.lambda.id
   description              = "Allow Lambda to connect to ElastiCache"
+}
+
+resource "aws_security_group_rule" "allow_ec2_to_elasticache" {
+  type                     = "ingress"
+  from_port                = 6379 # Default Redis port
+  to_port                  = 6379
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.elasticache.id
+  source_security_group_id = aws_security_group.ec2.id
+  description              = "Allow EC2 to connect to ElastiCache"
 }

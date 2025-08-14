@@ -7,39 +7,42 @@ locals {
     { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
     # VPC permissions for Lambda to operate within a VPC
     { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
-    # ElastiCache Serverless permissions - Allows connection to ANY cache
+    # ElastiCache (Redis) permissions
     { Effect = "Allow", Action = ["elasticache:Connect"], Resource = "*" },
-    # RDS DB permissions - Allows connection to ANY database
+    # RDS DB (Postgres) permissions
     { Effect = "Allow", Action = ["rds-db:connect"], Resource = "*" },
-    # Full SSM Permissions
-    { Effect = "Allow", Action = ["ssm:*"], Resource = "*" },
-    # S3 Full Access
+    # S3 Access
     { Effect = "Allow", Action = ["s3:*"], Resource = ["*"] },
-    # Lambda Invoke Permissions
-    { Effect = "Allow", Action = ["lambda:InvokeFunction"], Resource = ["*"] },
-    # Step Function Invoke Permissions
-    { Effect = "Allow", Action = ["states:StartExecution"], Resource = ["*"] },
+    # SSM Parameter Store Access
+    {
+      Effect = "Allow",
+      Action = [
+        "ssm:GetParameter",
+        "ssm:GetParameters",
+        "ssm:GetParametersByPath"
+      ],
+      Resource = "*"
+    },
+    # KMS Decrypt for SecureString SSM parameters
     {
       Effect   = "Allow",
-      Action   = ["states:DescribeExecution", "states:GetExecutionHistory", "states:StopExecution"],
-      Resource = ["*"]
+      Action   = "kms:Decrypt",
+      Resource = "*"
     }
   ]
 }
 
-# Create the IAM role once for the service
-module "drafting_lambda_role" {
+module "data_migration_lambda_role" {
   source = "../../base-infra/iam-lambda"
 
-  role_name         = "${var.project_name}-${var.environment}-drafting-service-role"
+  role_name         = "${var.project_name}-${var.environment}-data-migration-role"
   project_name      = var.project_name
   environment       = var.environment
   policy_statements = local.service_policy_statements
 }
 
-
 ###############################################################################
-# 2. Lambda functions
+# 2. Lambda Function
 ###############################################################################
 module "lambda" {
   for_each = var.lambdas
@@ -54,14 +57,14 @@ module "lambda" {
   layers        = [for layer_key in each.value.layers : var.available_layer_arns[layer_key]]
   environment_variables = merge(
     each.value.env_vars,
-    {SSM_PREFIX = "blackbox-${var.environment}"}
+    { SSM_PREFIX = "blackbox-${var.environment}" }
   )
 
-  # Standard parameters
+  # Standard parameters using the global placeholder
   s3_bucket        = var.placeholder_s3_bucket
   s3_key           = var.placeholder_s3_key
   source_code_hash = var.placeholder_source_code_hash
-  lambda_role_arn  = module.drafting_lambda_role.role_arn
+  lambda_role_arn  = module.data_migration_lambda_role.role_arn
 
   # VPC configuration
   vpc_subnet_ids         = var.private_subnet_ids
@@ -69,21 +72,15 @@ module "lambda" {
 }
 
 ###############################################################################
-# 3. State Machine 
+# 3. EventBridge Scheduler
 ###############################################################################
-module "drafting_state_machine" {
-  source = "../../base-infra/step-function"
+module "eventbridge" {
+  source      = "../../base-infra/eventbridge"
+  environment = var.environment
+  project_name = var.project_name
+  suffix      = "daily-trigger-data-migration"
 
-  project_name       = var.project_name
-  environment        = var.environment
-  state_machine_name = "drafting-workflow"
-  state_machine_type = "STANDARD"
-  definition = templatefile("${path.module}/state-machine.tftpl", {
-    rfp_cost_summary_lambda_arn = module.lambda["drafting-rfp-cost-summary"].lambda_arn
-    summary_lambda_arn          = module.lambda["drafting-summary"].lambda_arn
-    system_summary_lambda_arn   = module.lambda["drafting-system-summary"].lambda_arn
-    company_data_lambda_arn     = module.lambda["drafting-company-data"].lambda_arn
-    table_of_content_lambda_arn = module.lambda["drafting-table-of-content"].lambda_arn
-    user_preference_lambda_arn  = module.lambda["drafting-user-preference"].lambda_arn
-  })
+  # Target the specific lambda created in this module
+  lambda_arn_to_trigger = module.lambda["redis-postgres-migration"].lambda_arn
+  schedule_expression   = var.eventbridge_schedule_expression
 }

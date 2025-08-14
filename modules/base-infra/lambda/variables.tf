@@ -3,9 +3,20 @@ variable "function_name" {
   type        = string
 }
 
-variable "source_dir" {
-  description = "Directory containing Lambda source (unzipped)"
+variable "s3_bucket" {
+  description = "The S3 bucket name where the Lambda function's deployment package is stored."
   type        = string
+}
+
+variable "s3_key" {
+  description = "The S3 key for the Lambda function's deployment package."
+  type        = string
+}
+
+variable "source_code_hash" {
+  description = "Used to trigger updates when the S3 object changes. This is the ETag of the S3 object."
+  type        = string
+  default     = null
 }
 
 variable "lambda_role_arn" {
@@ -15,12 +26,11 @@ variable "lambda_role_arn" {
 
 variable "runtime" {
   type    = string
-  default = "python3.13"
 }
 
 variable "handler" {
   type    = string
-  default = "index.handler"
+  default = "lambda_function.lambda_handler"
 }
 
 variable "timeout" {

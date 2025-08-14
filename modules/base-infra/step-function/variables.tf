@@ -18,3 +18,9 @@ variable "definition" {
   type        = string
   sensitive   = true
 }
+
+variable "state_machine_type" {
+  description = "The type of the state machine (STANDARD or EXPRESS)."
+  type        = string
+  default     = "STANDARD"
+}

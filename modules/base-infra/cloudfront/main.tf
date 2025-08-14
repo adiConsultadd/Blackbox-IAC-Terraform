@@ -1,7 +1,16 @@
+resource "aws_cloudfront_origin_access_control" "this" {
+  name                              = "${var.s3_bucket_name}-oac"
+  description                       = "Origin Access Control for ${var.s3_bucket_name}"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+
 resource "aws_cloudfront_distribution" "this" {
   origin {
-    domain_name = "${var.s3_bucket_name}.s3.amazonaws.com"
-    origin_id   = "S3-${var.s3_bucket_name}"
+    domain_name              = var.s3_bucket_regional_domain_name
+    origin_access_control_id = aws_cloudfront_origin_access_control.this.id
+    origin_id                = "S3-${var.s3_bucket_name}"
   }
 
   enabled             = var.enabled

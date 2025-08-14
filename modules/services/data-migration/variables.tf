@@ -44,3 +44,8 @@ variable "placeholder_source_code_hash" {
   type        = string
   description = "Hash of the placeholder zip to trigger updates."
 }
+
+variable "eventbridge_schedule_expression" {
+  type        = string
+  description = "The cron schedule expression for the EventBridge trigger."
+}
