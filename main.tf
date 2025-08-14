@@ -95,7 +95,8 @@ resource "aws_iam_policy" "ec2_policy" {
           "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-rfp-files/*",
           # Add access to the new lambda artifacts bucket
           aws_s3_bucket.lambda_artifacts.arn,
-          "${aws_s3_bucket.lambda_artifacts.arn}/*"
+          "${aws_s3_bucket.lambda_artifacts.arn}/*",
+          "arn:aws:s3:::cost-image-upload-temp/*"
         ]
       },
       {
@@ -106,7 +107,14 @@ resource "aws_iam_policy" "ec2_policy" {
           "ssm:GetParametersByPath"
         ],
         Resource = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/*"
-      }
+      },
+      # Step Function Invoke Permissions
+      { Effect = "Allow", Action = ["states:StartExecution", "states:StartSyncExecution"], Resource = ["*"] },
+      {
+        Effect   = "Allow",
+        Action   = ["states:DescribeExecution", "states:GetExecutionHistory", "states:StopExecution"],
+        Resource = ["*"]
+      },
     ]
   })
 }
@@ -359,6 +367,9 @@ locals {
     "/blackbox-${var.environment}/highergov-portal-url"    = { value = var.highergov_portalurl, type = "String" },
     "/blackbox-${var.environment}/highergov-search-id"     = { value = var.search_id, type = "String" },
     "/blackbox-${var.environment}/openai-webhook-secret"     = { value = var.openai-webhook-secret, type = "String" },
+    "/blackbox-${var.environment}/APM_SERVER_URL"     = { value = var.apm_server_url, type = "String" },
+    "/blackbox-${var.environment}/APM_SECRET_TOKEN"     = { value = var.apm_secret_token, type = "String" },
+    "/blackbox-${var.environment}/ELASTIC_APM_API_KEY"     = { value = var.elastic_apm_api_key, type = "String" },
     }
 
   infra_parameters = {

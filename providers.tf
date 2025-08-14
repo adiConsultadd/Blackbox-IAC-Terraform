@@ -2,6 +2,7 @@ provider "aws" {
   region = var.aws_region
   default_tags {
     tags = {
+      APP_NAME    = var.project_name
       Environment = var.environment
       Project     = var.project_name
       ManagedBy   = "Terraform"
