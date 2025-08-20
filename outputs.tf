@@ -52,3 +52,8 @@ output "data_migration_lambda_arns" {
   description = "ARNs of the Lambda functions in the data-migration service"
   value       = module.data_migration.lambda_arns
 }
+
+output "validation_lambda_arns" {
+  description = "ARNs of the Lambda functions in the validation service"
+  value       = module.validation.lambda_arns
+}
