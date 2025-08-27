@@ -132,16 +132,36 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 module "ec2" {
   source = "./modules/base-infra/ec2"
 
-  project_name = var.project_name
-  environment  = var.environment
-  ami_id       = var.ec2_ami_id
+  name          = "ec2-instance"
+  project_name  = var.project_name
+  environment   = var.environment
+  ami_id        = var.ec2_ami_id
   instance_type = var.ec2_instance_type
-  key_name     = var.ec2_key_name
+  key_name      = var.ec2_key_name
 
   subnet_id                   = module.networking.public_subnet_ids[0]
   associate_public_ip_address = true
   security_group_id           = module.networking.ec2_security_group_id
   iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
+
+  depends_on = [aws_iam_instance_profile.ec2_profile]
+}
+
+module "deep_research_ec2" {
+  source = "./modules/base-infra/ec2"
+
+  name             = "playground" 
+  root_volume_size = var.deep_research_ec2_volume_size 
+  project_name     = var.project_name
+  environment      = var.environment
+  ami_id           = var.ec2_ami_id
+  instance_type    = var.ec2_instance_type
+  key_name         = var.ec2_key_name
+
+  subnet_id                   = module.networking.public_subnet_ids[1] 
+  associate_public_ip_address = true
+  security_group_id           = module.networking.ec2_security_group_id 
+  iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name 
 
   depends_on = [aws_iam_instance_profile.ec2_profile]
 }

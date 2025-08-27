@@ -7,8 +7,12 @@ resource "aws_instance" "this" {
   iam_instance_profile        = var.iam_instance_profile
   associate_public_ip_address = var.associate_public_ip_address
 
+  root_block_device {
+    volume_size = var.root_volume_size
+  }
+
   tags = {
-    Name        = "${var.project_name}-${var.environment}-ec2-instance"
+    Name        = "${var.project_name}-${var.environment}-${var.name}"
     Environment = var.environment
     Project     = var.project_name
   }

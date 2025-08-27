@@ -72,7 +72,11 @@ variable "ssh_access_cidr" {
   type        = string
   description = "CIDR block for SSH access to the EC2 instance"
 }
-
+variable "deep_research_ec2_volume_size" {
+  description = "The root volume size for the deep-research EC2 instance."
+  type        = number
+  default     = 20
+}
 # ---------- Static SSM Parameters ----------
 variable "google_api_key" {
   description = "Google API Key"

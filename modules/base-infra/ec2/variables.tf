@@ -44,3 +44,14 @@ variable "associate_public_ip_address" {
   description = "Whether to associate a public IP address with the instance"
   default     = false
 }
+
+variable "name" {
+  type        = string
+  description = "The specific name for the EC2 instance tag."
+}
+
+variable "root_volume_size" {
+  description = "The size of the root EBS volume in GB."
+  type        = number
+  default     = 8 # Default size if not specified
+}
