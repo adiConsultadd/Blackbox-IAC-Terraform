@@ -155,7 +155,7 @@ module "deep_research_ec2" {
   project_name     = var.project_name
   environment      = var.environment
   ami_id           = var.ec2_ami_id
-  instance_type    = var.ec2_instance_type
+  instance_type    = var.deep_research_ec2_instance_type
   key_name         = var.ec2_key_name
 
   subnet_id                   = module.networking.public_subnet_ids[1] 
