@@ -8,6 +8,13 @@ module "s3" {
   bucket_suffix = "sourcing-rfp-files"
 }
 
+module "excel_s3" {
+  source        = "../../base-infra/s3"
+  environment   = var.environment
+  project_name  = var.project_name
+  bucket_suffix = "sourcing-costing-document"
+}
+
 ###############################################################################
 # 2. CloudFront (Serves content from this service's S3 bucket)
 ###############################################################################
