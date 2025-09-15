@@ -36,6 +36,8 @@ module "rds" {
 # 3. Shared ElastiCache Redis Cluster
 #############################################################
 module "elasticache" {
+  count = terraform.workspace == "prod" ? 1 : 0
+  
   source = "./modules/base-infra/elasticache"
 
   project_name           = var.project_name
@@ -422,11 +424,18 @@ locals {
     "/blackbox-${var.environment}/db-password"    = { value = module.rds.db_password, type = "SecureString" },
     "/blackbox-${var.environment}/db-port"        = { value = module.rds.db_port, type = "String" },
     "/blackbox-${var.environment}/db-user"        = { value = module.rds.db_username, type = "String" },
-    "/blackbox-${var.environment}/redis-endpoint" = { value = "${module.elasticache.endpoint}:${module.elasticache.port}", type = "String" },
     "/blackbox-${var.environment}/cloudfront-url" = { value = module.sourcing.cloudfront_domain, type = "String" }
   }
+  
+  redis_ssm_params = terraform.workspace == "prod" ? {
+    "/blackbox-${var.environment}/redis-endpoint" = { value = "${module.elasticache[0].endpoint}:${module.elasticache[0].port}", type = "String" },
+    } : {
+    "/blackbox-${var.environment}/redis-endpoint" = { value = var.redis_endpoint_new, type = "String" },
+    "/blackbox-${var.environment}/redis-password" = { value = var.redis_password, type = "SecureString" },
+    "/blackbox-${var.environment}/redis-user"     = { value = var.redis_user, type = "String" },
+  }
 
-  all_ssm_parameters = merge(local.static_parameters, local.infra_parameters)
+  all_ssm_parameters = merge(local.static_parameters, local.infra_parameters, local.redis_ssm_params)
 }
 
 resource "aws_ssm_parameter" "app_config" {
