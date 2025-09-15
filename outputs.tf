@@ -24,8 +24,8 @@ output "rds_database_endpoint" {
 }
 
 output "elasticache_cluster_endpoint" {
-  description = "Endpoint of the shared ElastiCache Redis cluster"
-  value       = module.elasticache.endpoint
+  description = "Endpoint of the shared ElastiCache Redis cluster (only available in prod)"
+  value       = terraform.workspace == "prod" ? module.elasticache[0].endpoint : "N/A (not deployed in this environment)"
 }
 
 output "vpc_id" {
