@@ -25,6 +25,15 @@ locals {
       Resource = ["*"]
     }
   ]
+
+  # Flexibly split lambdas based on package_type
+  zip_lambdas = {
+    for k, v in var.lambdas : k => v if lookup(v, "package_type", "Zip") == "Zip"
+  }
+    
+  ecr_lambdas = {
+    for k, v in var.lambdas : k => v if lookup(v, "package_type", "Zip") == "Image"
+  }
 }
 
 # Create the IAM role once for the service
@@ -37,12 +46,11 @@ module "drafting_lambda_role" {
   policy_statements = local.service_policy_statements
 }
 
-
 ###############################################################################
-# 2. Lambda functions
+# 2. ZIP-based Lambda functions
 ###############################################################################
-module "lambda" {
-  for_each = var.lambdas
+module "lambda_zip" {
+  for_each = local.zip_lambdas
 
   source        = "../../base-infra/lambda"
   function_name = "${var.project_name}-${var.environment}-${each.key}"
@@ -54,7 +62,7 @@ module "lambda" {
   layers        = [for layer_key in each.value.layers : var.available_layer_arns[layer_key]]
   environment_variables = merge(
     each.value.env_vars,
-    {SSM_PREFIX = "blackbox-${var.environment}"}
+    { SSM_PREFIX = "blackbox-${var.environment}" }
   )
 
   # Standard parameters
@@ -69,7 +77,66 @@ module "lambda" {
 }
 
 ###############################################################################
-# 3. State Machine 
+# 3. ECR-based Lambda Functions (FLEXIBLE)
+###############################################################################
+
+# Create one ECR repository for each lambda marked as "Image"
+resource "aws_ecr_repository" "ecr_repo" {
+  for_each = local.ecr_lambdas
+
+  name                 = "${var.project_name}-${var.environment}-${each.key}"
+  image_tag_mutability = "MUTABLE"
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
+# Build a placeholder image locally for each ECR repo
+resource "docker_image" "placeholder" {
+  for_each = local.ecr_lambdas
+
+  name = "${aws_ecr_repository.ecr_repo[each.key].repository_url}:placeholder"
+  build {
+    context  = "${path.module}/placeholder-image"
+    platform = "linux/amd64"
+  }
+}
+
+# Push the placeholder image to its corresponding ECR repo
+resource "docker_registry_image" "placeholder" {
+  for_each = local.ecr_lambdas
+  name     = docker_image.placeholder[each.key].name
+}
+
+# Define the Lambda function for each ECR repo
+resource "aws_lambda_function" "lambda_ecr" {
+  for_each = local.ecr_lambdas
+
+  function_name = "${var.project_name}-${var.environment}-${each.key}"
+  role          = module.drafting_lambda_role.role_arn
+  package_type  = "Image"
+  image_uri     = docker_registry_image.placeholder[each.key].name
+
+  timeout     = each.value.timeout
+  memory_size = each.value.memory_size
+  environment {
+    variables = merge(
+      each.value.env_vars,
+      { SSM_PREFIX = "blackbox-${var.environment}" }
+    )
+  }
+  vpc_config {
+    subnet_ids         = var.private_subnet_ids
+    security_group_ids = [var.lambda_security_group_id]
+  }
+
+  lifecycle {
+    ignore_changes = [image_uri]
+  }
+}
+
+###############################################################################
+# 4. State Machine (Updated to reference correct module names)
 ###############################################################################
 module "drafting_state_machine" {
   source = "../../base-infra/step-function"
@@ -79,11 +146,11 @@ module "drafting_state_machine" {
   state_machine_name = "drafting-workflow"
   state_machine_type = "STANDARD"
   definition = templatefile("${path.module}/state-machine.tftpl", {
-    rfp_cost_summary_lambda_arn = module.lambda["drafting-rfp-cost-summary"].lambda_arn
-    summary_lambda_arn          = module.lambda["drafting-summary"].lambda_arn
-    system_summary_lambda_arn   = module.lambda["drafting-system-summary"].lambda_arn
-    company_data_lambda_arn     = module.lambda["drafting-company-data"].lambda_arn
-    table_of_content_lambda_arn = module.lambda["drafting-table-of-content"].lambda_arn
-    user_preference_lambda_arn  = module.lambda["drafting-user-preference"].lambda_arn
+    rfp_cost_summary_lambda_arn = module.lambda_zip["drafting-rfp-cost-summary"].lambda_arn
+    summary_lambda_arn          = module.lambda_zip["drafting-summary"].lambda_arn
+    system_summary_lambda_arn   = module.lambda_zip["drafting-system-summary"].lambda_arn
+    company_data_lambda_arn     = module.lambda_zip["drafting-company-data"].lambda_arn
+    table_of_content_lambda_arn = module.lambda_zip["drafting-table-of-content"].lambda_arn
+    user_preference_lambda_arn  = module.lambda_zip["drafting-user-preference"].lambda_arn
   })
 }

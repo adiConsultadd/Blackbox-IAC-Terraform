@@ -28,6 +28,7 @@ variable "lambdas" {
     timeout     = number
     memory_size = number
     env_vars    = optional(map(string))
+    package_type  = optional(string, "Zip")
   }))
   default = {}
 }
