@@ -83,6 +83,8 @@ module "validation_state_machine" {
   definition = templatefile("${path.module}/state-machine.tftpl", {
     legal_req_lambda_arn = module.lambda["validation-legal-requirements"].lambda_arn
     tech_req_lambda_arn  = module.lambda["validation-technical-requirements"].lambda_arn
+    date_extractor_lambda_arn = module.lambda["validation-date-extractor"].lambda_arn
+    checklist_lambda_arn      = module.lambda["validation-checklist"].lambda_arn
   })
 }
 
