@@ -417,6 +417,8 @@ locals {
     "/blackbox-${var.environment}/APM_SERVER_URL"     = { value = var.apm_server_url, type = "String" },
     "/blackbox-${var.environment}/APM_SECRET_TOKEN"     = { value = var.apm_secret_token, type = "String" },
     "/blackbox-${var.environment}/ELASTIC_APM_API_KEY"     = { value = var.elastic_apm_api_key, type = "String" },
+    "/blackbox-${var.environment}/es-cloud-id"     = { value = var.es-cloud-id, type = "String" },
+    "/blackbox-${var.environment}/es-api-key"     = { value = var.es-api-key, type = "String" },
     }
 
   infra_parameters = {

@@ -159,6 +159,16 @@ variable "elastic_apm_api_key" {
   type        = string
   sensitive   = true
 }
+variable "es-cloud-id" {
+  description = "Elastic Cloud Id"
+  type        = string
+  sensitive   = true
+}
+variable "es-api-key" {
+  description = "Elastic API Key"
+  type        = string
+  sensitive   = true
+}
 
 # ---------- New Redis Static SSM Parameters ----------
 variable "redis_endpoint_new" {
