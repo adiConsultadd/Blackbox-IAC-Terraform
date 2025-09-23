@@ -33,22 +33,7 @@ module "rds" {
 }
 
 #############################################################
-# 3. Shared ElastiCache Redis Cluster
-#############################################################
-module "elasticache" {
-  count = terraform.workspace == "prod" ? 1 : 0
-  
-  source = "./modules/base-infra/elasticache"
-
-  project_name           = var.project_name
-  environment            = var.environment
-  subnet_ids             = module.networking.private_subnet_ids
-  vpc_security_group_ids = [module.networking.elasticache_security_group_id]
-}
-
-
-#############################################################
-# 4. Shared EC2 Instance & IAM Role
+# 3. Shared EC2 Instance & IAM Role
 #############################################################
 resource "aws_iam_role" "ec2_role" {
   name = "${var.project_name}-${var.environment}-ec2-role"
@@ -170,7 +155,7 @@ module "deep_research_ec2" {
 }
 
 #############################################################
-# 5. Lambda Artifacts Bucket and Placeholder Code
+# 4. Lambda Artifacts Bucket and Placeholder Code
 #############################################################
 resource "aws_s3_bucket" "lambda_artifacts" {
   bucket = "${var.project_name}-${var.environment}-lambda-artifacts"
@@ -206,7 +191,7 @@ resource "aws_s3_object" "placeholder" {
 }
 
 #############################################################
-# 6.  Layers
+# 5.  Layers
 #############################################################
 module "layers" {
   source = "./modules/base-infra/layers"
@@ -429,9 +414,7 @@ locals {
     "/blackbox-${var.environment}/cloudfront-url" = { value = module.sourcing.cloudfront_domain, type = "String" }
   }
   
-  redis_ssm_params = terraform.workspace == "prod" ? {
-    "/blackbox-${var.environment}/redis-endpoint" = { value = "${module.elasticache[0].endpoint}:${module.elasticache[0].port}", type = "String" },
-    } : {
+  redis_ssm_params = {
     "/blackbox-${var.environment}/redis-endpoint" = { value = var.redis_endpoint_new, type = "String" },
     "/blackbox-${var.environment}/redis-password" = { value = var.redis_password, type = "SecureString" },
     "/blackbox-${var.environment}/redis-user"     = { value = var.redis_user, type = "String" },

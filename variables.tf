@@ -174,19 +174,16 @@ variable "es-api-key" {
 variable "redis_endpoint_new" {
   description = "The endpoint for the external Redis instance (e.g., Redis Cloud)."
   type        = string
-  default     = "" # Default to empty string
 }
 
 variable "redis_password" {
   description = "The password for the external Redis instance."
   type        = string
   sensitive   = true
-  default     = ""
 }
 
 variable "redis_user" {
   description = "The username for the external Redis instance."
   type        = string
-  default     = "default" 
 }
 
