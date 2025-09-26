@@ -126,7 +126,7 @@ module "ec2" {
   ami_id        = var.ec2_ami_id
   instance_type = var.ec2_instance_type
   key_name      = var.ec2_key_name
-
+  root_volume_size = var.main_ec2_volume_size 
   subnet_id                   = module.networking.public_subnet_ids[0]
   associate_public_ip_address = true
   security_group_id           = module.networking.ec2_security_group_id

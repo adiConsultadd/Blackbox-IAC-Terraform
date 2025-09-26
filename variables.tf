@@ -82,6 +82,14 @@ variable "deep_research_ec2_volume_size" {
   type        = number
   default     = 20
 }
+
+variable "main_ec2_volume_size" {
+  description = "The root volume size for the deep-research EC2 instance."
+  type        = number
+  default     = 20
+}
+
+
 # ---------- Static SSM Parameters ----------
 variable "google_api_key" {
   description = "Google API Key"
