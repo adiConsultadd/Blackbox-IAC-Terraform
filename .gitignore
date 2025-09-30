@@ -29,3 +29,7 @@ Thumbs.db
 
 python/
 .placeholder
+
+
+*.txt
+*.sh
