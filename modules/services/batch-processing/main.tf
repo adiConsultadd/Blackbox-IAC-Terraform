@@ -114,7 +114,7 @@ module "batch_processing_lambda_role" {
 # 4. Lambda Functions (ZIP-BASED)
 #############################################################
 module "lambda" {
-  for_each = var.lambdas
+  for_each = local.zip_lambdas
 
   source        = "../../base-infra/lambda"
   function_name = "${var.project_name}-${var.environment}-${each.key}"
