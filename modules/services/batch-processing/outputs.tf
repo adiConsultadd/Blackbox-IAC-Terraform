@@ -15,7 +15,10 @@ output "s3_bucket_name" {
 
 output "lambda_arns" {
   description = "Map of Lambda function ARNs for the batch processing service"
-  value       = { for k, m in module.lambda : k => m.lambda_arn }
+  value = merge(
+    { for k, m in module.lambda : k => m.lambda_arn },
+    { for k, l in aws_lambda_function.lambda_ecr : k => l.arn }
+  )
 }
 
 output "s3_bucket_arn" {

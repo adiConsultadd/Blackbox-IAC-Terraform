@@ -441,7 +441,7 @@ locals {
     "/blackbox-${var.environment}/db-user"        = { value = module.rds.db_username, type = "String" },
     "/blackbox-${var.environment}/cloudfront-url" = { value = module.sourcing.cloudfront_domain, type = "String" }
     "/blackbox-${var.environment}/validation-workflow-arn" = { value = module.validation.validation_state_machine_arn, type = "String" }
-    "/blackbox-${var.environment}/batch-processing/websocket-url" = { value = module.batch_processing.websocket_api_url, type = "String" }
+    "/blackbox-${var.environment}/batch-processing-websocket-url" = { value = module.batch_processing.websocket_api_url, type = "String" }
   }
   
   redis_ssm_params = {

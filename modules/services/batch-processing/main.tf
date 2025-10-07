@@ -74,11 +74,29 @@ locals {
     # WebSocket API communication
     { Effect = "Allow", Action = ["execute-api:ManageConnections"], Resource = ["arn:aws:execute-api:*:*:*/*"] }
   ]
+
+  zip_lambdas = {  
+    for k, v in var.lambdas : k => v if lookup(v, "package_type", "Zip") == "Zip"
+  }
+
+  ecr_lambdas = {
+    for k, v in var.lambdas : k => v if lookup(v, "package_type", "Zip") == "Image"
+  }
+
   lambda_specific_env_vars = {
     "batch-processing-validation-aggregator" = {
       BATCH_S3_BUCKET        = module.s3.bucket_name
       CONNECTIONS_TABLE_NAME = module.websocket_connections_table.table_name
       COUNTER_TABLE_NAME     = module.validation_counter_table.table_name
+      DB_NAME                = "postgres"
+    },
+    "batch-processing-validation-pre-process" = {
+      DYNAMODB_TABLE_NAME = module.validation_counter_table.table_name,
+      SQS_QUEUE_URL       = module.validation_sqs_trigger.main_queue_url
+    },
+    "batch-processing-validation-statemachine-fail" = {
+      CONNECTIONS_TABLE_NAME = module.websocket_connections_table.table_name,
+      COUNTER_TABLE_NAME     = module.validation_counter_table.table_name,
       DB_NAME                = "postgres"
     }
   }
@@ -93,7 +111,7 @@ module "batch_processing_lambda_role" {
 }
 
 #############################################################
-# 4. Lambda Functions
+# 4. Lambda Functions (ZIP-BASED)
 #############################################################
 module "lambda" {
   for_each = var.lambdas
@@ -118,6 +136,60 @@ module "lambda" {
 
   vpc_subnet_ids         = var.private_subnet_ids
   vpc_security_group_ids = [var.lambda_security_group_id]
+}
+
+#############################################################
+# 5. ECR-based Lambda Functions 
+#############################################################
+resource "aws_ecr_repository" "ecr_repo" {
+  for_each = local.ecr_lambdas
+  name        = "${var.project_name}-${var.environment}-${each.key}"
+  image_tag_mutability = "MUTABLE"
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
+
+resource "docker_image" "placeholder" {
+  for_each = local.ecr_lambdas
+
+  name = "${aws_ecr_repository.ecr_repo[each.key].repository_url}:placeholder"
+  build {
+    context = "${path.module}/placeholder-image"
+    platform = "linux/amd64"
+  }
+}
+
+resource "docker_registry_image" "placeholder" {
+  for_each = local.ecr_lambdas
+  name  = docker_image.placeholder[each.key].name
+}
+
+resource "aws_lambda_function" "lambda_ecr" {
+  for_each = local.ecr_lambdas
+
+  function_name = "${var.project_name}-${var.environment}-${each.key}"
+  role     = module.batch_processing_lambda_role.role_arn
+  package_type = "Image"
+  image_uri  = docker_registry_image.placeholder[each.key].name
+
+  timeout  = each.value.timeout
+  memory_size = each.value.memory_size
+  environment {
+    variables = merge(
+    each.value.env_vars,
+    { SSM_PREFIX = "${var.project_name}-${var.environment}" },
+        lookup(local.lambda_specific_env_vars, each.key, {})
+    )
+ }
+ vpc_config {
+    subnet_ids    = var.private_subnet_ids
+    security_group_ids = [var.lambda_security_group_id]
+ }
+
+  lifecycle {
+    ignore_changes = [image_uri]
+  }
 }
 
 #############################################################
