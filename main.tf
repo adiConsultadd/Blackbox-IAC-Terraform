@@ -80,11 +80,12 @@ resource "aws_iam_policy" "ec2_policy" {
         Resource = [
           "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-rfp-files",
           "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-rfp-files/*",
-          # Add access to the new lambda artifacts bucket
           aws_s3_bucket.lambda_artifacts.arn,
           "${aws_s3_bucket.lambda_artifacts.arn}/*",
           "arn:aws:s3:::cost-image-upload-temp/*",
-          "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-costing-document/*"
+          "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-costing-document/*",
+            module.batch_processing.s3_bucket_arn,     
+          "${module.batch_processing.s3_bucket_arn}/*" 
         ]
       },
       {
@@ -384,7 +385,34 @@ module "validation" {
 }
 
 #############################################################
-# 13. SSM Parameter Store
+# 13. batch Processing Service
+#############################################################
+module "batch_processing" {
+  source = "./modules/services/batch-processing"
+
+  # Global Vars
+  environment  = var.environment
+  project_name = var.project_name
+  lambdas      = lookup(var.services_lambdas, "batch-processing", {})
+
+  # Pass in shared infrastructure details
+  private_subnet_ids       = module.networking.private_subnet_ids
+  lambda_security_group_id = module.networking.lambda_security_group_id
+
+  # Placeholder Lambda Artifacts
+  placeholder_s3_bucket      = aws_s3_bucket.lambda_artifacts.id
+  placeholder_s3_key         = aws_s3_object.placeholder.key
+  placeholder_source_code_hash = aws_s3_object.placeholder.etag
+
+  # Lambda Layers
+  available_layer_arns = module.layers.layer_arns
+
+  # Validation State Machine ARN
+  validation_state_machine_arn = module.validation.validation_state_machine_arn
+}
+
+#############################################################
+# 14. SSM Parameter Store
 #############################################################
 locals {
   static_parameters = {
@@ -412,6 +440,8 @@ locals {
     "/blackbox-${var.environment}/db-port"        = { value = module.rds.db_port, type = "String" },
     "/blackbox-${var.environment}/db-user"        = { value = module.rds.db_username, type = "String" },
     "/blackbox-${var.environment}/cloudfront-url" = { value = module.sourcing.cloudfront_domain, type = "String" }
+    "/blackbox-${var.environment}/validation-workflow-arn" = { value = module.validation.validation_state_machine_arn, type = "String" }
+    "/blackbox-${var.environment}/batch-processing/websocket-url" = { value = module.batch_processing.websocket_api_url, type = "String" }
   }
   
   redis_ssm_params = {

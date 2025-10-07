@@ -1,10 +1,10 @@
 {
-  "Comment": "Run two Lambdas in parallel, then final Lambda, fail if any fails",
+  "Comment": "Run four Lambdas in parallel, then check for application-level failures, and execute final Lambda.",
   "StartAt": "Parallel",
   "States": {
     "Parallel": {
       "Type": "Parallel",
-      "Next": "check-completed",
+      "Next": "CheckForErrors",
       "Branches": [
         {
           "StartAt": "technical-check",
@@ -63,61 +63,61 @@
           }
         },
         {
-        "StartAt": "date-extractor",
-        "States": {
-          "date-extractor": {
-            "Type": "Task",
-            "Resource": "arn:aws:states:::lambda:invoke",
-            "OutputPath": "$.Payload",
-            "Parameters": {
-              "FunctionName": "${date_extractor_lambda_arn}",
-              "Payload.$": "$"
-            },
-            "Retry": [
-              {
-                "ErrorEquals": [
-                  "Lambda.ServiceException",
-                  "Lambda.AWSLambdaException",
-                  "Lambda.SdkClientException",
-                  "Lambda.TooManyRequestsException"
-                ],
-                "IntervalSeconds": 1,
-                "MaxAttempts": 3,
-                "BackoffRate": 2
-              }
-            ],
-            "End": true
+          "StartAt": "date-extractor",
+          "States": {
+            "date-extractor": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "FunctionName": "${date_extractor_lambda_arn}",
+                "Payload.$": "$"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2
+                }
+              ],
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "checklist-check",
+          "States": {
+            "checklist-check": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "OutputPath": "$.Payload",
+              "Parameters": {
+                "FunctionName": "${checklist_lambda_arn}",
+                "Payload.$": "$"
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2
+                }
+              ],
+              "End": true
+            }
           }
         }
-      },
-      {
-        "StartAt": "checklist-check",
-        "States": {
-          "checklist-check": {
-            "Type": "Task",
-            "Resource": "arn:aws:states:::lambda:invoke",
-            "OutputPath": "$.Payload",
-            "Parameters": {
-              "FunctionName": "${checklist_lambda_arn}",
-              "Payload.$": "$"
-            },
-            "Retry": [
-              {
-                "ErrorEquals": [
-                  "Lambda.ServiceException",
-                  "Lambda.AWSLambdaException",
-                  "Lambda.SdkClientException",
-                  "Lambda.TooManyRequestsException"
-                ],
-                "IntervalSeconds": 1,
-                "MaxAttempts": 3,
-                "BackoffRate": 2
-              }
-            ],
-            "End": true
-          }
-        }
-      }
       ],
       "Catch": [
         {
@@ -128,13 +128,39 @@
         }
       ]
     },
+    "CheckForErrors": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$[0].statusCode",
+          "NumericGreaterThanEquals": 300,
+          "Next": "ExecutionFailed"
+        },
+        {
+          "Variable": "$[1].statusCode",
+          "NumericGreaterThanEquals": 300,
+          "Next": "ExecutionFailed"
+        },
+        {
+          "Variable": "$[2].statusCode",
+          "NumericGreaterThanEquals": 300,
+          "Next": "ExecutionFailed"
+        },
+        {
+          "Variable": "$[3].statusCode",
+          "NumericGreaterThanEquals": 300,
+          "Next": "ExecutionFailed"
+        }
+      ],
+      "Default": "check-completed"
+    },
     "check-completed": {
       "Type": "Succeed"
     },
     "ExecutionFailed": {
       "Type": "Fail",
-      "Error": "ExecutionFailedError",
-      "Cause": "One of the steps failed. Check the logs for details."
+      "Error": "ApplicationError",
+      "Cause": "One of the parallel steps returned a non-success status code (>= 300)."
     }
   }
 }

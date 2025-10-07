@@ -16,8 +16,14 @@ variable "lambda_arn_to_trigger" {
 variable "schedule_expression" {
   type        = string
   description = "Schedule expression (e.g. cron(0 8 * * ? *))"
+  default     = null
 }
 
+variable "event_pattern" {
+  type        = string
+  description = "Event pattern for event-driven triggers. Must be a JSON string."
+  default     = null 
+}
 variable "suffix"{
   type        = string
 }

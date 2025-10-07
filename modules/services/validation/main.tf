@@ -24,7 +24,16 @@ locals {
     },
     # SSM Parameter Store & KMS Decrypt Permissions
     { Effect = "Allow", Action = ["ssm:GetParameter", "ssm:GetParameters", "ssm:GetParametersByPath"], Resource = "*" },
-    { Effect   = "Allow", Action   = "kms:Decrypt", Resource = "*" }
+    { Effect = "Allow", Action   = "kms:Decrypt", Resource = "*" },
+    # Temporary addition of SQS permissions for batch content queue -> To be deleted later
+    {
+      Action   = [
+        "sqs:SendMessage",
+        "sqs:GetQueueAttributes",
+        ]
+      Effect   = "Allow"
+      Resource = "arn:aws:sqs:us-east-1:133528580579:batch-conten-queue.fifo"
+    }
   ]
 }
 
