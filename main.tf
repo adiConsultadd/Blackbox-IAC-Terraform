@@ -409,6 +409,9 @@ module "batch_processing" {
 
   # Validation State Machine ARN
   validation_state_machine_arn = module.validation.validation_state_machine_arn
+
+  drafting_lambda_arns      = module.drafting.lambda_arns
+  deep_research_lambda_arns = module.deep_research.lambda_arns
 }
 
 #############################################################
@@ -440,8 +443,10 @@ locals {
     "/blackbox-${var.environment}/db-port"        = { value = module.rds.db_port, type = "String" },
     "/blackbox-${var.environment}/db-user"        = { value = module.rds.db_username, type = "String" },
     "/blackbox-${var.environment}/cloudfront-url" = { value = module.sourcing.cloudfront_domain, type = "String" }
-    "/blackbox-${var.environment}/validation-workflow-arn" = { value = module.validation.validation_state_machine_arn, type = "String" }
-    "/blackbox-${var.environment}/batch-processing-websocket-url" = { value = module.batch_processing.websocket_api_url, type = "String" }
+    "/blackbox-${var.environment}/validation-workflow-arn" = { value = module.validation.validation_state_machine_arn, type = "String" },
+    "/blackbox-${var.environment}/batch-processing-websocket-url" = { value = module.batch_processing.websocket_api_url, type = "String" },
+    "/blackbox-${var.environment}/batch-processing-child-sfn-arn"    = { value = module.batch_processing.child_sfn_arn, type = "String" },
+    "/blackbox-${var.environment}/batch-processing-content-queue-url" = { value = module.batch_processing.content_fifo_queue_url, type = "String" }
   }
   
   redis_ssm_params = {

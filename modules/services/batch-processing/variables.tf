@@ -47,3 +47,14 @@ variable "validation_state_machine_arn" {
   description = "The ARN of the validation workflow state machine from the validation service"
   type        = string
 }
+variable "drafting_lambda_arns" {
+  description = "A map of Lambda function ARNs from the drafting service."
+  type        = map(string)
+  default     = {}
+}
+
+variable "deep_research_lambda_arns" {
+  description = "A map of Lambda function ARNs from the deep-research service."
+  type        = map(string)
+  default     = {}
+}

@@ -27,6 +27,9 @@ locals {
 # Define the main API Gateway
 resource "aws_api_gateway_rest_api" "rest_api" {
   name = "${var.project_name}-${var.environment}-batch-processing-rest-api"
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
 }
 
 # Create the Lambda Authorizer
@@ -37,6 +40,7 @@ resource "aws_api_gateway_authorizer" "lambda_authorizer" {
   authorizer_credentials = aws_iam_role.apigw_authorizer_invocation_role.arn
   type                   = "TOKEN"
   identity_source        = "method.request.header.Authorization"
+  authorizer_result_ttl_in_seconds = 3600
 }
 
 # IAM Role to allow API Gateway to invoke the authorizer Lambda
@@ -95,6 +99,9 @@ resource "aws_api_gateway_method" "post_validation" {
   http_method   = "POST"
   authorization = "CUSTOM"
   authorizer_id = aws_api_gateway_authorizer.lambda_authorizer.id
+  request_models = {
+    "application/json" = "Empty"
+  }
 }
 
 # Integration for the POST method
@@ -210,6 +217,7 @@ resource "aws_api_gateway_method_response" "cors_options_200" {
   http_method = aws_api_gateway_method.cors_options[each.key].http_method
   status_code = "200"
   response_parameters = {
+    "method.response.header.Access-Control-Allow-Credentials" = true,
     "method.response.header.Access-Control-Allow-Headers" = true,
     "method.response.header.Access-Control-Allow-Methods" = true,
     "method.response.header.Access-Control-Allow-Origin"  = true
@@ -226,7 +234,8 @@ resource "aws_api_gateway_integration_response" "cors_options_200" {
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
     "method.response.header.Access-Control-Allow-Methods" = "'${each.value.methods}'",
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'",
+    "method.response.header.Access-Control-Allow-Credentials" = "'true'"
   }
 
   depends_on = [aws_api_gateway_method_response.cors_options_200, aws_api_gateway_integration.cors_options]
@@ -242,6 +251,9 @@ resource "aws_api_gateway_method_response" "post_validation_200" {
   http_method   = aws_api_gateway_method.post_validation.http_method
   status_code   = "200"
   response_parameters = { "method.response.header.Access-Control-Allow-Origin" = true }
+  response_models = {
+    "application/json" = "Empty"
+  }
 }
 
 resource "aws_api_gateway_method_response" "get_batches_200" {
@@ -250,6 +262,9 @@ resource "aws_api_gateway_method_response" "get_batches_200" {
   http_method   = aws_api_gateway_method.get_batches.http_method
   status_code   = "200"
   response_parameters = { "method.response.header.Access-Control-Allow-Origin" = true }
+  response_models = {
+    "application/json" = "Empty"
+  }
 }
 
 resource "aws_api_gateway_method_response" "get_batch_by_id_200" {
@@ -258,6 +273,9 @@ resource "aws_api_gateway_method_response" "get_batch_by_id_200" {
   http_method   = aws_api_gateway_method.get_batch_by_id.http_method
   status_code   = "200"
   response_parameters = { "method.response.header.Access-Control-Allow-Origin" = true }
+  response_models = {
+    "application/json" = "Empty"
+  }
 }
 
 resource "aws_api_gateway_method_response" "post_start_200" {
@@ -266,6 +284,10 @@ resource "aws_api_gateway_method_response" "post_start_200" {
   http_method   = aws_api_gateway_method.post_start.http_method
   status_code   = "200"
   response_parameters = { "method.response.header.Access-Control-Allow-Origin" = true }
+  response_models = {
+    "application/json" = "Empty"
+  }
+
 }
 
 

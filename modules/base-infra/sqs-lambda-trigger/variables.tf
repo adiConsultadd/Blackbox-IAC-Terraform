@@ -24,3 +24,7 @@ variable "max_receive_count" {
   type        = number
   default     = 5
 }
+variable "aws_account_id" {
+  description = "The AWS Account ID to set as the queue owner principal."
+  type        = string
+}

@@ -54,25 +54,37 @@ module "websocket_connections_table" {
 #############################################################
 locals {
   service_policy_statements = [
-    # General permissions
+    # CloudWatch Logs permissions (More secure than CloudWatchFullAccess)
     { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = ["arn:aws:logs:*:*:*"] },
+    
+    # VPC Lambda permissions (Matches your 'ec2_permission' policy)
     { Effect = "Allow", Action = ["ec2:CreateNetworkInterface", "ec2:DescribeNetworkInterfaces", "ec2:DeleteNetworkInterface"], Resource = "*" },
-    # S3 permissions
-    { Effect = "Allow", Action = ["s3:*"], Resource = [module.s3.bucket_arn, "${module.s3.bucket_arn}/*"] },
-    # DynamoDB permissions
-    { Effect = "Allow", Action = ["dynamodb:*"], Resource = [
-        module.validation_table.table_arn,
-        module.validation_counter_table.table_arn,
-        module.websocket_connections_table.table_arn
-      ] 
+    
+    # S3 permissions (More secure than AmazonS3FullAccess)
+    { Effect = "Allow", Action = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket", "s3:HeadObject"], Resource = [module.s3.bucket_arn, "${module.s3.bucket_arn}/*"] },
+    
+    # DynamoDB permissions (More secure than AmazonDynamoDBFullAccess)
+    { Effect = "Allow", Action = ["dynamodb:Query", "dynamodb:Scan", "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:DeleteItem"], Resource = ["*"]
     },
-    # SSM & KMS for secrets
-    { Effect = "Allow", Action = ["ssm:GetParameter", "ssm:GetParameters", "ssm:GetParametersByPath"], Resource = "*" },
+    
+    # SSM permissions (Matches your 'bulk_validation_ssm_permission' policy)
+    { Effect = "Allow", Action = ["ssm:GetParameter", "ssm:GetParameters", "ssm:GetParametersByPath"], Resource = ["*"] },
+    
+    # KMS permissions (Required for SecureString SSM parameters)
     { Effect = "Allow", Action = "kms:Decrypt", Resource = "*" },
-    # ADD SQS PERMISSIONS
-    { Effect = "Allow", Action = ["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:GetQueueAttributes"], Resource = "*" },
-    # WebSocket API communication
-    { Effect = "Allow", Action = ["execute-api:ManageConnections"], Resource = ["arn:aws:execute-api:*:*:*/*"] }
+    
+    # SQS permissions (More secure than AmazonSQSFullAccess)
+    { Effect = "Allow", Action = ["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:GetQueueAttributes", "sqs:SendMessage"], Resource = "*" },
+    
+    # WebSocket API permissions (Matches your 'websocket_dynamodb' policy)
+    { Effect = "Allow", Action = ["execute-api:ManageConnections"], Resource = ["${aws_apigatewayv2_api.websocket_api.execution_arn}/*"] },
+
+    # Step Functions permissions (More secure than AWSStepFunctionsFullAccess)
+    { Effect = "Allow", Action = ["states:StartExecution", "states:DescribeExecution", "states:StopExecution"], Resource = "*" },
+
+    # SNS Full Access ---
+    { Effect = "Allow", Action = "sns:*", Resource = "*" }
+
   ]
 
   zip_lambdas = {  
@@ -98,7 +110,16 @@ locals {
       CONNECTIONS_TABLE_NAME = module.websocket_connections_table.table_name,
       COUNTER_TABLE_NAME     = module.validation_counter_table.table_name,
       DB_NAME                = "postgres"
-    }
+    },
+    "batch-processing-ws-connect" = {
+      TABLE_NAME             = module.websocket_connections_table.table_name
+    },
+    "batch-processing-ws-disconnect" = {
+      TABLE_NAME = module.websocket_connections_table.table_name
+    },
+    "batch-processing-content-child-sfn-rfp-text" = {
+      BATCH_BUCKET = module.s3.bucket_name
+    },
   }
 }
 
@@ -209,6 +230,7 @@ module "validation_sqs_trigger" {
   visibility_timeout_seconds = 11
   max_message_size           = 262144
   max_receive_count          = 5
+  aws_account_id             = data.aws_caller_identity.current.account_id
 }
 
 #############################################################
@@ -250,18 +272,28 @@ module "on_validation_success_rule" {
   })
 }
 
+module "on_validation_failure_rule" {
+  source      = "../../base-infra/eventbridge"
+  environment = var.environment
+  project_name = var.project_name
+  suffix      = "batch-processing-OnValidationFailure"
+
+  # Trigger the failure handler lambda
+  lambda_arn_to_trigger = module.lambda["batch-processing-validation-statemachine-fail"].lambda_arn
+  
+  event_pattern = jsonencode({
+    "source" : ["aws.states"],
+    "detail-type" : ["Step Functions Execution Status Change"],
+    "detail" : {
+      "status" : ["FAILED", "TIMED_OUT", "ABORTED"],
+      "stateMachineArn" : [var.validation_state_machine_arn]
+    }
+  })
+}
+
 #############################################################
 # 10. Step Functions
 #############################################################
-module "content_parent_sfn" {
-  source = "../../base-infra/step-function"
-
-  project_name       = var.project_name
-  environment        = var.environment
-  state_machine_name = "batch-processing-content-parent-sfn"
-  definition = templatefile("${path.module}/state-machine-1.tftpl", {})
-  state_machine_type = "STANDARD" 
-}
 
 module "content_child_sfn" {
   source = "../../base-infra/step-function"
@@ -269,6 +301,27 @@ module "content_child_sfn" {
   project_name       = var.project_name
   environment        = var.environment
   state_machine_name = "batch-processing-content-child-sfn"
-  definition = templatefile("${path.module}/state-machine-2.tftpl", {})
-  state_machine_type = "STANDARD" 
+  definition = templatefile("${path.module}/state-machine-2.tftpl", {
+    # Lambdas from the 'batch-processing' service
+    lambda_child_sfn_rfp_text_arn = module.lambda["batch-processing-content-child-sfn-rfp-text"].lambda_arn
+    lambda_child_sfn_handle_failure_arn = module.lambda["batch-processing-content-child-sfn-handle-failure"].lambda_arn 
+    lambda_update_status_arn            = module.lambda["batch-processing-content-child-sfn-update-status"].lambda_arn
+    
+    # Lambdas from the 'drafting' service
+    lambda_system_summary_arn   = var.drafting_lambda_arns["drafting-system-summary"]
+    lambda_table_of_content_arn = var.drafting_lambda_arns["drafting-table-of-content"]
+    lambda_company_data_arn     = var.drafting_lambda_arns["drafting-company-data"]
+    lambda_user_summary_arn     = var.drafting_lambda_arns["drafting-summary"] 
+    lambda_cost_summary_arn     = var.drafting_lambda_arns["drafting-rfp-cost-summary"]
+    lambda_user_preference_arn  = var.drafting_lambda_arns["drafting-user-preference"]
+    lambda_section_content_arn = var.drafting_lambda_arns["drafting-section-content-batch"]
+    lambda_toc_extract_arn          = var.drafting_lambda_arns["drafting-toc-extract"]
+
+    # Lambdas from the 'deep-research' service
+    lambda_deep_research_topic_arn     = var.deep_research_lambda_arns["deep-research-query"]
+    lambda_deep_research_prompt_arn    = var.deep_research_lambda_arns["deep-research-prompt"] 
+    lambda_deep_research_execution_arn = var.deep_research_lambda_arns["deep-research"]  
+    lambda_deep_research_pulling_arn   = var.deep_research_lambda_arns["deep-research-polling"] 
+  })
+  state_machine_type = "STANDARD"
 }

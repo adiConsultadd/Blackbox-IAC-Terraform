@@ -1,11 +1,282 @@
 {
-    "Comment" : "A placeholder state machine, to be defined later.",
-    "StartAt" : "Placeholder",
-    "States" : {
-      "Placeholder" : {
-        "Type" : "Pass",
-        "Result" : "Success",
-        "End" : true
-      }
+  "Comment": "Child Step Function executing the RFP content pipeline",
+  "StartAt": "RFP_TEXT",
+  "States": {
+    "RFP_TEXT": {
+      "Type": "Task",
+      "Resource": "${lambda_child_sfn_rfp_text_arn}",
+      "ResultPath": "$.payload",
+      "Next": "Parallel",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.error",
+          "Next": "HandleFailure"
+        }
+      ]
+    },
+    "Parallel": {
+      "Type": "Parallel",
+      "Next": "Preferences",
+      "Branches": [
+        {
+          "StartAt": "GenerateSummaries",
+          "States": {
+            "GenerateSummaries": {
+              "Type": "Parallel",
+              "Branches": [
+                {
+                  "StartAt": "SystemSummary",
+                  "States": {
+                    "SystemSummary": {
+                      "Type": "Task",
+                      "Resource": "${lambda_system_summary_arn}",
+                      "Next": "Parallel (1)"
+                    },
+                    "Parallel (1)": {
+                      "Type": "Parallel",
+                      "Branches": [
+                        {
+                          "StartAt": "TOCGenerate",
+                          "States": {
+                            "TOCGenerate": {
+                              "Type": "Task",
+                              "Resource": "${lambda_table_of_content_arn}",
+                              "End": true
+                            }
+                          }
+                        },
+                        {
+                          "StartAt": "Compay Data",
+                          "States": {
+                            "Compay Data": {
+                              "Type": "Task",
+                              "Resource": "${lambda_company_data_arn}",
+                              "End": true
+                            }
+                          }
+                        }
+                      ],
+                      "End": true
+                    }
+                  }
+                },
+                {
+                  "StartAt": "UserSummary",
+                  "States": {
+                    "UserSummary": {
+                      "Type": "Task",
+                      "Resource": "${lambda_user_summary_arn}",
+                      "End": true
+                    }
+                  }
+                },
+                {
+                  "StartAt": "CostSummary",
+                  "States": {
+                    "CostSummary": {
+                      "Type": "Task",
+                      "Resource": "${lambda_cost_summary_arn}",
+                      "End": true
+                    }
+                  }
+                }
+              ],
+              "End": true,
+              "ResultPath": null
+            }
+          }
+        },
+        {
+          "StartAt": "DeepResearchTopics",
+          "States": {
+            "DeepResearchTopics": {
+              "Type": "Task",
+              "Resource": "${lambda_deep_research_topic_arn}",
+              "ResultPath": "$.deepResearchTopics",
+              "Next": "DeepResearchPrompt"
+            },
+            "DeepResearchPrompt": {
+              "Type": "Task",
+              "Resource": "${lambda_deep_research_prompt_arn}",
+              "ResultPath": "$.deepResearchTopics",
+              "Next": "DeepResearcheExecution"
+            },
+            "DeepResearcheExecution": {
+              "Type": "Task",
+              "Resource": "${lambda_deep_research_execution_arn}",
+              "ResultPath": "$.deepResearchExecution",
+              "Next": "DeepResearchResults"
+            },
+            "DeepResearchResults": {
+              "Type": "Map",
+              "ItemsPath": "$.deepResearchExecution.body.responses",
+              "MaxConcurrency": 5,
+              "ResultPath": "$.deepResearchResults",
+              "Iterator": {
+                "StartAt": "InitialisePolling",
+                "States": {
+                  "InitialisePolling": {
+                    "Type": "Pass",
+                    "Result": {
+                      "retryCount": 0
+                    },
+                    "ResultPath": "$.meta",
+                    "Next": "FetchResult"
+                  },
+                  "FetchResult": {
+                    "Type": "Task",
+                    "Resource": "${lambda_deep_research_pulling_arn}",
+                    "Parameters": {
+                      "topic.$": "$",
+                      "batch_id.$": "$$.Execution.Input.batch_id",
+                      "source_id.$": "$$.Execution.Input.source_id"
+                    },
+                    "ResultPath": "$.pollResult",
+                    "Next": "ParsePullResponse"
+                  },
+                  "ParsePullResponse": {
+                    "Type": "Pass",
+                    "Parameters": {
+                      "statusCode.$": "$.pollResult.statusCode",
+                      "body.$": "States.StringToJson($.pollResult.body)"
+                    },
+                    "ResultPath": "$.parsedResponse",
+                    "Next": "IsDeepResearchCompleted"
+                  },
+                  "IsDeepResearchCompleted": {
+                    "Type": "Choice",
+                    "Choices": [
+                      {
+                        "Variable": "$.parsedResponse.body.status",
+                        "StringEquals": "completed",
+                        "Next": "FinalizeDeepResearch"
+                      }
+                    ],
+                    "Default": "IncrementRetryCount"
+                  },
+                  "IncrementRetryCount": {
+                    "Type": "Pass",
+                    "Parameters": {
+                      "retryCount.$": "States.MathAdd($.meta.retryCount, 1)"
+                    },
+                    "ResultPath": "$.meta",
+                    "Next": "ShouldRetryImmediately"
+                  },
+                  "ShouldRetryImmediately": {
+                    "Type": "Choice",
+                    "Choices": [
+                      {
+                        "Variable": "$.meta.retryCount",
+                        "NumericLessThan": 3,
+                        "Next": "FetchResult"
+                      }
+                    ],
+                    "Default": "ResetRetryWithWait"
+                  },
+                  "ResetRetryWithWait": {
+                    "Type": "Pass",
+                    "Result": 0,
+                    "ResultPath": "$.meta.retryCount",
+                    "Next": "WaitBeforeNextPoll"
+                  },
+                  "WaitBeforeNextPoll": {
+                    "Type": "Wait",
+                    "Seconds": 120,
+                    "Next": "FetchResult"
+                  },
+                  "FinalizeDeepResearch": {
+                    "Type": "Pass",
+                    "End": true
+                  }
+                }
+              },
+              "End": true
+            }
+          }
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.error",
+          "Next": "HandleFailure"
+        }
+      ],
+      "ResultPath": null
+    },
+    "Preferences": {
+      "Type": "Task",
+      "Resource": "${lambda_user_preference_arn}",
+      "Next": "TOC Sections List",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.error",
+          "Next": "HandleFailure"
+        }
+      ]
+    },
+    "TOC Sections List": {
+      "Type": "Task",
+      "Resource": "${lambda_toc_extract_arn}",
+      "Next": "ContentGeneration",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "ResultPath": "$.error",
+          "Next": "HandleFailure"
+        }
+      ],
+      "ResultPath": "$.body"
+    },
+    "ContentGeneration": {
+      "Type": "Map",
+      "ItemsPath": "$.body.body.toc_sections",
+      "MaxConcurrency": 1,
+      "ResultPath": "$.content",
+      "Iterator": {
+        "StartAt": "GenerateSection",
+        "States": {
+          "GenerateSection": {
+            "Type": "Task",
+            "Resource": "${lambda_section_content_arn}",
+            "End": true
+          }
+        }
+      },
+      "Next": "UpdateStatus",
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "HandleFailure",
+          "ResultPath": "$.error"
+        }
+      ]
+    },
+    "UpdateStatus": {
+      "Type": "Task",
+      "Resource": "${lambda_update_status_arn}",
+      "End": true
+    },
+    "HandleFailure": {
+      "Type": "Task",
+      "Resource": "${lambda_child_sfn_handle_failure_arn}",
+      "ResultPath": "$.failure",
+      "Next": "ChildFailed"
+    },
+    "ChildFailed": {
+      "Type": "Fail"
     }
   }
+}
