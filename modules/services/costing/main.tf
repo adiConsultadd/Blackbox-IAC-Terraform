@@ -116,9 +116,10 @@ resource "aws_lambda_function" "costing_hourly_wages_ecr" {
   timeout     = var.lambdas["costing-hourly-wages"].timeout
   memory_size = var.lambdas["costing-hourly-wages"].memory_size
   environment {
-    variables = {
-      SSM_PREFIX = "blackbox-${var.environment}"
-    }
+    variables = merge(
+      lookup(var.lambdas["costing-hourly-wages"], "env_vars", {}),
+      { SSM_PREFIX = "blackbox-${var.environment}" }
+    )
   }
   vpc_config {
     subnet_ids         = var.private_subnet_ids
