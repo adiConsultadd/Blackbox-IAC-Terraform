@@ -20,6 +20,10 @@ locals {
     start_resource = {
       id      = aws_api_gateway_resource.start_resource.id,
       methods = "POST,OPTIONS" # Methods available on /batches/content/start
+    },
+    source_id_resource = {
+      id      = aws_api_gateway_resource.source_id_resource.id,
+      methods = "DELETE,OPTIONS"
     }
   }
 }
@@ -154,6 +158,99 @@ resource "aws_api_gateway_integration" "get_batch_by_id_integration" {
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = module.lambda["batch-processing-content-api-handler"].invoke_arn
+}
+
+# --- NEW Endpoint: POST /batches ---
+resource "aws_api_gateway_method" "post_batches" {
+  rest_api_id   = aws_api_gateway_rest_api.rest_api.id
+  resource_id   = aws_api_gateway_resource.batches_resource.id
+  http_method   = "POST"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.lambda_authorizer.id
+}
+
+resource "aws_api_gateway_integration" "post_batches_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.rest_api.id
+  resource_id             = aws_api_gateway_resource.batches_resource.id
+  http_method             = aws_api_gateway_method.post_batches.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = module.lambda["batch-processing-content-api-handler"].invoke_arn
+}
+
+resource "aws_api_gateway_method_response" "post_batches_200" {
+  rest_api_id = aws_api_gateway_rest_api.rest_api.id
+  resource_id = aws_api_gateway_resource.batches_resource.id
+  http_method = aws_api_gateway_method.post_batches.http_method
+  status_code = "200"
+  response_parameters = { "method.response.header.Access-Control-Allow-Origin" = true }
+  response_models = {
+    "application/json" = "Empty"
+  }
+}
+
+# --- NEW Endpoint: PATCH /batches/{batch_id} ---
+resource "aws_api_gateway_method" "patch_batch_by_id" {
+  rest_api_id   = aws_api_gateway_rest_api.rest_api.id
+  resource_id   = aws_api_gateway_resource.batch_id_resource.id
+  http_method   = "PATCH"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.lambda_authorizer.id
+}
+
+resource "aws_api_gateway_integration" "patch_batch_by_id_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.rest_api.id
+  resource_id             = aws_api_gateway_resource.batch_id_resource.id
+  http_method             = aws_api_gateway_method.patch_batch_by_id.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = module.lambda["batch-processing-content-api-handler"].invoke_arn
+}
+
+resource "aws_api_gateway_method_response" "patch_batch_by_id_200" {
+  rest_api_id = aws_api_gateway_rest_api.rest_api.id
+  resource_id = aws_api_gateway_resource.batch_id_resource.id
+  http_method = aws_api_gateway_method.patch_batch_by_id.http_method
+  status_code = "200"
+  response_parameters = { "method.response.header.Access-Control-Allow-Origin" = true }
+  response_models = {
+    "application/json" = "Empty"
+  }
+}
+
+# --- NEW Endpoint: DELETE /batches/{batch_id}/{source_id} ---
+resource "aws_api_gateway_resource" "source_id_resource" {
+  rest_api_id = aws_api_gateway_rest_api.rest_api.id
+  parent_id   = aws_api_gateway_resource.batch_id_resource.id
+  path_part   = "{source_id}"
+}
+
+resource "aws_api_gateway_method" "delete_source_by_id" {
+  rest_api_id   = aws_api_gateway_rest_api.rest_api.id
+  resource_id   = aws_api_gateway_resource.source_id_resource.id
+  http_method   = "DELETE"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.lambda_authorizer.id
+}
+
+resource "aws_api_gateway_integration" "delete_source_by_id_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.rest_api.id
+  resource_id             = aws_api_gateway_resource.source_id_resource.id
+  http_method             = aws_api_gateway_method.delete_source_by_id.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = module.lambda["batch-processing-content-api-handler"].invoke_arn
+}
+
+resource "aws_api_gateway_method_response" "delete_source_by_id_200" {
+  rest_api_id = aws_api_gateway_rest_api.rest_api.id
+  resource_id = aws_api_gateway_resource.source_id_resource.id
+  http_method = aws_api_gateway_method.delete_source_by_id.http_method
+  status_code = "200"
+  response_parameters = { "method.response.header.Access-Control-Allow-Origin" = true }
+  response_models = {
+    "application/json" = "Empty"
+  }
 }
 
 # --- NEW Endpoint: POST /batches/content/start ---
@@ -310,9 +407,15 @@ resource "aws_api_gateway_deployment" "rest_api_deployment" {
     aws_api_gateway_resource.start_resource.id,
     aws_api_gateway_method.post_start.id,
     aws_api_gateway_integration.post_start_integration.id,
-      # Add the new CORS resources to the trigger
-      values(aws_api_gateway_method.cors_options)[*].id,
-      values(aws_api_gateway_integration_response.cors_options_200)[*].id
+    values(aws_api_gateway_method.cors_options)[*].id,
+    values(aws_api_gateway_integration_response.cors_options_200)[*].id,
+    aws_api_gateway_method.patch_batch_by_id.id,
+    aws_api_gateway_integration.patch_batch_by_id_integration.id,
+    aws_api_gateway_resource.source_id_resource.id,
+    aws_api_gateway_method.delete_source_by_id.id,
+    aws_api_gateway_integration.delete_source_by_id_integration.id,
+    aws_api_gateway_method.post_batches.id,
+    aws_api_gateway_integration.post_batches_integration.id
     ]))
   }
   lifecycle { create_before_destroy = true }
