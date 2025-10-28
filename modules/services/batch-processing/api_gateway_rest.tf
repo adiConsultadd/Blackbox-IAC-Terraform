@@ -15,7 +15,7 @@ locals {
     },
     batch_id_resource = {
       id      = aws_api_gateway_resource.batch_id_resource.id,
-      methods = "GET,OPTIONS" # Methods available on /batches/{batch_id}
+      methods = "GET,OPTIONS,PATCH" # Methods available on /batches/{batch_id}
     },
     start_resource = {
       id      = aws_api_gateway_resource.start_resource.id,

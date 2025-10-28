@@ -78,15 +78,21 @@ resource "aws_iam_policy" "ec2_policy" {
         ]
         Effect   = "Allow"
         Resource = [
-          "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-rfp-files",
-          "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-rfp-files/*",
-          aws_s3_bucket.lambda_artifacts.arn,
-          "${aws_s3_bucket.lambda_artifacts.arn}/*",
-          "arn:aws:s3:::cost-image-upload-temp/*",
-          "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-costing-document/*",
-            module.batch_processing.s3_bucket_arn,     
-          "${module.batch_processing.s3_bucket_arn}/*" 
-        ]
+        "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-rfp-files",
+        "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-rfp-files/*",
+        
+        aws_s3_bucket.lambda_artifacts.arn,
+        "${aws_s3_bucket.lambda_artifacts.arn}/*",
+        
+        "arn:aws:s3:::cost-image-upload-temp",
+        "arn:aws:s3:::cost-image-upload-temp/*",
+        
+        "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-costing-document",
+        "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-costing-document/*",
+
+        module.batch_processing.s3_bucket_arn,  
+        "${module.batch_processing.s3_bucket_arn}/*"  
+      ]
       },
       {
         Effect = "Allow",
