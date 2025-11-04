@@ -24,6 +24,10 @@ locals {
     source_id_resource = {
       id      = aws_api_gateway_resource.source_id_resource.id,
       methods = "DELETE,OPTIONS"
+    },
+    agency_references_resource = {
+      id      = aws_api_gateway_resource.agency_references_resource.id,
+      methods = "GET,POST,OPTIONS" # Methods available on /agency-references
     }
   }
 }
@@ -283,6 +287,47 @@ resource "aws_api_gateway_integration" "post_start_integration" {
   uri                     = module.lambda["batch-processing-content-api-handler"].invoke_arn
 }
 
+# --- NEW Endpoint: /agency-references ---
+resource "aws_api_gateway_resource" "agency_references_resource" {
+  rest_api_id = aws_api_gateway_rest_api.rest_api.id
+  parent_id   = aws_api_gateway_rest_api.rest_api.root_resource_id
+  path_part   = "agency-references"
+}
+
+resource "aws_api_gateway_method" "get_agency_references" {
+  rest_api_id   = aws_api_gateway_rest_api.rest_api.id
+  resource_id   = aws_api_gateway_resource.agency_references_resource.id
+  http_method   = "GET"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.lambda_authorizer.id
+}
+
+resource "aws_api_gateway_integration" "get_agency_references_integration" {
+  rest_api_id               = aws_api_gateway_rest_api.rest_api.id
+  resource_id               = aws_api_gateway_resource.agency_references_resource.id
+  http_method               = aws_api_gateway_method.get_agency_references.http_method
+  integration_http_method = "POST"
+  type                      = "AWS_PROXY"
+  uri                       = module.lambda["batch-processing-content-api-handler"].invoke_arn
+}
+
+resource "aws_api_gateway_method" "post_agency_references" {
+  rest_api_id   = aws_api_gateway_rest_api.rest_api.id
+  resource_id   = aws_api_gateway_resource.agency_references_resource.id
+  http_method   = "POST"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.lambda_authorizer.id
+}
+
+resource "aws_api_gateway_integration" "post_agency_references_integration" {
+  rest_api_id               = aws_api_gateway_rest_api.rest_api.id
+  resource_id               = aws_api_gateway_resource.agency_references_resource.id
+  http_method               = aws_api_gateway_method.post_agency_references.http_method
+  integration_http_method = "POST"
+  type                      = "AWS_PROXY"
+  uri                       = module.lambda["batch-processing-content-api-handler"].invoke_arn
+}
+
 ################################################################################
 # CORS OPTIONS Method and Mock Integration
 ################################################################################
@@ -387,6 +432,27 @@ resource "aws_api_gateway_method_response" "post_start_200" {
 
 }
 
+resource "aws_api_gateway_method_response" "get_agency_references_200" {
+  rest_api_id   = aws_api_gateway_rest_api.rest_api.id
+  resource_id   = aws_api_gateway_resource.agency_references_resource.id
+  http_method   = aws_api_gateway_method.get_agency_references.http_method
+  status_code   = "200"
+  response_parameters = { "method.response.header.Access-Control-Allow-Origin" = true }
+  response_models = {
+    "application/json" = "Empty"
+  }
+}
+
+resource "aws_api_gateway_method_response" "post_agency_references_200" {
+  rest_api_id   = aws_api_gateway_rest_api.rest_api.id
+  resource_id   = aws_api_gateway_resource.agency_references_resource.id
+  http_method   = aws_api_gateway_method.post_agency_references.http_method
+  status_code   = "200"
+  response_parameters = { "method.response.header.Access-Control-Allow-Origin" = true }
+  response_models = {
+    "application/json" = "Empty"
+  }
+}
 
 # Deployment of the API
 resource "aws_api_gateway_deployment" "rest_api_deployment" {
@@ -415,7 +481,12 @@ resource "aws_api_gateway_deployment" "rest_api_deployment" {
     aws_api_gateway_method.delete_source_by_id.id,
     aws_api_gateway_integration.delete_source_by_id_integration.id,
     aws_api_gateway_method.post_batches.id,
-    aws_api_gateway_integration.post_batches_integration.id
+    aws_api_gateway_integration.post_batches_integration.id,
+    aws_api_gateway_resource.agency_references_resource.id,
+    aws_api_gateway_method.get_agency_references.id,
+    aws_api_gateway_integration.get_agency_references_integration.id,
+    aws_api_gateway_method.post_agency_references.id,
+    aws_api_gateway_integration.post_agency_references_integration.id
     ]))
   }
   lifecycle { create_before_destroy = true }
