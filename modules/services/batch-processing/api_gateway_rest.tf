@@ -212,7 +212,7 @@ resource "aws_api_gateway_method_response" "patch_batch_by_id_200" {
   resource_id = aws_api_gateway_resource.batch_id_resource.id
   http_method = aws_api_gateway_method.patch_batch_by_id.http_method
   status_code = "200"
-  response_parameters = { "method.response.header.Access-Control-Allow-Origin" = true }
+  response_parameters = { "method.response.header.Access-Control-Allow-Origin" = false }
   response_models = {
     "application/json" = "Empty"
   }
@@ -369,7 +369,7 @@ resource "aws_api_gateway_method_response" "get_batch_by_id_200" {
   resource_id   = aws_api_gateway_resource.batch_id_resource.id
   http_method   = aws_api_gateway_method.get_batch_by_id.http_method
   status_code   = "200"
-  response_parameters = { "method.response.header.Access-Control-Allow-Origin" = true }
+  response_parameters = { "method.response.header.Access-Control-Allow-Origin" = false }
   response_models = {
     "application/json" = "Empty"
   }
