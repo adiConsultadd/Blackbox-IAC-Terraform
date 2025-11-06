@@ -277,7 +277,7 @@ resource "aws_api_gateway_method" "post_start" {
   authorization = "CUSTOM"
   authorizer_id = aws_api_gateway_authorizer.lambda_authorizer.id
 }
-
+ 
 resource "aws_api_gateway_integration" "post_start_integration" {
   rest_api_id             = aws_api_gateway_rest_api.rest_api.id
   resource_id             = aws_api_gateway_resource.start_resource.id
