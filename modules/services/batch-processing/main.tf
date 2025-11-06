@@ -243,7 +243,7 @@ resource "aws_sqs_queue" "content_fifo_queue" {
   fifo_queue                 = true
   content_based_deduplication = true
   max_message_size           = 262144
-  visibility_timeout_seconds = 121
+  visibility_timeout_seconds = 60
 }
 
 # The Lambda Trigger for the FIFO queue

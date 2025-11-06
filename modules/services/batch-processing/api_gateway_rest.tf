@@ -290,7 +290,7 @@ resource "aws_api_gateway_integration" "post_start_integration" {
 # --- NEW Endpoint: /agency-references ---
 resource "aws_api_gateway_resource" "agency_references_resource" {
   rest_api_id = aws_api_gateway_rest_api.rest_api.id
-  parent_id   = aws_api_gateway_rest_api.rest_api.root_resource_id
+  parent_id   = aws_api_gateway_resource.batches_resource.id
   path_part   = "agency-references"
 }
 
