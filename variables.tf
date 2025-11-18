@@ -195,3 +195,25 @@ variable "redis_user" {
   type        = string
 }
 
+
+variable "slack_feedback_webhook_url" {
+  description = "Slack Webhook URL for sending feedback notifications"
+  type        = string
+}
+
+variable "jira_site_url" {
+  description = "Jira Site URL"
+  type        = string  
+}
+
+variable "jira_email" {
+  description = "Jira User Email"
+  type        = string  
+}
+
+variable "jira_api_token" {
+  description = "Jira API Token"
+  type        = string  
+  sensitive   = true
+  
+}

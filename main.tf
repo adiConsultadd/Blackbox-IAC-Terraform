@@ -78,14 +78,21 @@ resource "aws_iam_policy" "ec2_policy" {
         ]
         Effect   = "Allow"
         Resource = [
-          "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-rfp-files",
-          "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-rfp-files/*",
-          # Add access to the new lambda artifacts bucket
-          aws_s3_bucket.lambda_artifacts.arn,
-          "${aws_s3_bucket.lambda_artifacts.arn}/*",
-          "arn:aws:s3:::cost-image-upload-temp/*",
-          "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-costing-document/*"
-        ]
+        "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-rfp-files",
+        "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-rfp-files/*",
+        
+        aws_s3_bucket.lambda_artifacts.arn,
+        "${aws_s3_bucket.lambda_artifacts.arn}/*",
+        
+        "arn:aws:s3:::cost-image-upload-temp",
+        "arn:aws:s3:::cost-image-upload-temp/*",
+        
+        "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-costing-document",
+        "arn:aws:s3:::${var.project_name}-${var.environment}-sourcing-costing-document/*",
+
+        module.batch_processing.s3_bucket_arn,  
+        "${module.batch_processing.s3_bucket_arn}/*"  
+      ]
       },
       {
         Effect = "Allow",
@@ -191,7 +198,30 @@ resource "aws_s3_object" "placeholder" {
 }
 
 #############################################################
-# 5.  Layers
+# 5. Global Shared Bucket
+#############################################################
+resource "aws_s3_bucket" "global_shared_bucket" {
+  bucket = "${var.project_name}-${var.environment}-feedback-storage"
+}
+
+resource "aws_s3_bucket_versioning" "global_shared_versioning" {
+  bucket = aws_s3_bucket.global_shared_bucket.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "global_shared_public_access" {
+  bucket = aws_s3_bucket.global_shared_bucket.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+#############################################################
+# 6.  Layers
 #############################################################
 module "layers" {
   source = "./modules/base-infra/layers"
@@ -202,7 +232,7 @@ module "layers" {
 }
 
 #############################################################
-# 6.  Sourcing Service
+# 7.  Sourcing Service
 #############################################################
 module "sourcing" {
   source = "./modules/services/sourcing"
@@ -237,7 +267,7 @@ module "sourcing" {
 }
 
 #############################################################
-# 7.  Drafting Service
+# 8.  Drafting Service
 #############################################################
 module "drafting" {
   source = "./modules/services/drafting"
@@ -261,7 +291,7 @@ module "drafting" {
 }
 
 #############################################################
-# 8.  Costing Service
+# 9.  Costing Service
 #############################################################
 module "costing" {
   source = "./modules/services/costing"
@@ -285,7 +315,7 @@ module "costing" {
 }
 
 #############################################################
-# 9. Deep Research Service
+# 10. Deep Research Service
 #############################################################
 module "deep_research" {
   source = "./modules/services/deep-research"
@@ -309,7 +339,7 @@ module "deep_research" {
 }
 
 #############################################################
-# 10. Webhook Service
+# 11. Webhook Service
 #############################################################
 module "webhook" {
   source = "./modules/services/webhook"
@@ -333,7 +363,7 @@ module "webhook" {
 }
 
 #############################################################
-# 11. Data Migration Service
+# 12. Data Migration Service
 #############################################################
 module "data_migration" {
   source = "./modules/services/data-migration"
@@ -360,7 +390,7 @@ module "data_migration" {
 }
 
 #############################################################
-# 12. Validation Service
+# 13. Validation Service
 #############################################################
 module "validation" {
   source = "./modules/services/validation"
@@ -384,7 +414,37 @@ module "validation" {
 }
 
 #############################################################
-# 13. SSM Parameter Store
+# 14. batch Processing Service
+#############################################################
+module "batch_processing" {
+  source = "./modules/services/batch-processing"
+
+  # Global Vars
+  environment  = var.environment
+  project_name = var.project_name
+  lambdas      = lookup(var.services_lambdas, "batch-processing", {})
+
+  # Pass in shared infrastructure details
+  private_subnet_ids       = module.networking.private_subnet_ids
+  lambda_security_group_id = module.networking.lambda_security_group_id
+
+  # Placeholder Lambda Artifacts
+  placeholder_s3_bucket      = aws_s3_bucket.lambda_artifacts.id
+  placeholder_s3_key         = aws_s3_object.placeholder.key
+  placeholder_source_code_hash = aws_s3_object.placeholder.etag
+
+  # Lambda Layers
+  available_layer_arns = module.layers.layer_arns
+
+  # Validation State Machine ARN
+  validation_state_machine_arn = module.validation.validation_state_machine_arn
+
+  drafting_lambda_arns      = module.drafting.lambda_arns
+  deep_research_lambda_arns = module.deep_research.lambda_arns
+}
+
+#############################################################
+# 15. SSM Parameter Store
 #############################################################
 locals {
   static_parameters = {
@@ -412,6 +472,10 @@ locals {
     "/blackbox-${var.environment}/db-port"        = { value = module.rds.db_port, type = "String" },
     "/blackbox-${var.environment}/db-user"        = { value = module.rds.db_username, type = "String" },
     "/blackbox-${var.environment}/cloudfront-url" = { value = module.sourcing.cloudfront_domain, type = "String" }
+    "/blackbox-${var.environment}/validation-workflow-arn" = { value = module.validation.validation_state_machine_arn, type = "String" },
+    "/blackbox-${var.environment}/batch-processing-websocket-url" = { value = module.batch_processing.websocket_api_url, type = "String" },
+    "/blackbox-${var.environment}/batch-processing-child-sfn-arn"    = { value = module.batch_processing.child_sfn_arn, type = "String" },
+    "/blackbox-${var.environment}/batch-processing-content-queue-url" = { value = module.batch_processing.content_fifo_queue_url, type = "String" }
   }
   
   redis_ssm_params = {
@@ -420,7 +484,14 @@ locals {
     "/blackbox-${var.environment}/redis-user"     = { value = var.redis_user, type = "String" },
   }
 
-  all_ssm_parameters = merge(local.static_parameters, local.infra_parameters, local.redis_ssm_params)
+  feedback_params = {
+    "/blackbox-${var.environment}/slack-feedback-webhook-url" = { value = var.slack_feedback_webhook_url, type = "SecureString" },
+    "/blackbox-${var.environment}/jira-site-url"               = { value = var.jira_site_url, type = "String" },
+    "/blackbox-${var.environment}/jira-email"                  = { value = var.jira_email, type = "String" },
+    "/blackbox-${var.environment}/jira-api-token"               = { value = var.jira_api_token, type = "SecureString" },
+  }
+
+  all_ssm_parameters = merge(local.static_parameters, local.infra_parameters, local.redis_ssm_params, local.feedback_params)
 }
 
 resource "aws_ssm_parameter" "app_config" {
