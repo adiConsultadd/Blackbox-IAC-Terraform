@@ -198,7 +198,30 @@ resource "aws_s3_object" "placeholder" {
 }
 
 #############################################################
-# 5.  Layers
+# 5. Global Shared Bucket
+#############################################################
+resource "aws_s3_bucket" "global_shared_bucket" {
+  bucket = "${var.project_name}-${var.environment}-feedback-storage"
+}
+
+resource "aws_s3_bucket_versioning" "global_shared_versioning" {
+  bucket = aws_s3_bucket.global_shared_bucket.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "global_shared_public_access" {
+  bucket = aws_s3_bucket.global_shared_bucket.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+#############################################################
+# 6.  Layers
 #############################################################
 module "layers" {
   source = "./modules/base-infra/layers"
@@ -209,7 +232,7 @@ module "layers" {
 }
 
 #############################################################
-# 6.  Sourcing Service
+# 7.  Sourcing Service
 #############################################################
 module "sourcing" {
   source = "./modules/services/sourcing"
@@ -244,7 +267,7 @@ module "sourcing" {
 }
 
 #############################################################
-# 7.  Drafting Service
+# 8.  Drafting Service
 #############################################################
 module "drafting" {
   source = "./modules/services/drafting"
@@ -268,7 +291,7 @@ module "drafting" {
 }
 
 #############################################################
-# 8.  Costing Service
+# 9.  Costing Service
 #############################################################
 module "costing" {
   source = "./modules/services/costing"
@@ -292,7 +315,7 @@ module "costing" {
 }
 
 #############################################################
-# 9. Deep Research Service
+# 10. Deep Research Service
 #############################################################
 module "deep_research" {
   source = "./modules/services/deep-research"
@@ -316,7 +339,7 @@ module "deep_research" {
 }
 
 #############################################################
-# 10. Webhook Service
+# 11. Webhook Service
 #############################################################
 module "webhook" {
   source = "./modules/services/webhook"
@@ -340,7 +363,7 @@ module "webhook" {
 }
 
 #############################################################
-# 11. Data Migration Service
+# 12. Data Migration Service
 #############################################################
 module "data_migration" {
   source = "./modules/services/data-migration"
@@ -367,7 +390,7 @@ module "data_migration" {
 }
 
 #############################################################
-# 12. Validation Service
+# 13. Validation Service
 #############################################################
 module "validation" {
   source = "./modules/services/validation"
@@ -391,7 +414,7 @@ module "validation" {
 }
 
 #############################################################
-# 13. batch Processing Service
+# 14. batch Processing Service
 #############################################################
 module "batch_processing" {
   source = "./modules/services/batch-processing"
@@ -421,7 +444,7 @@ module "batch_processing" {
 }
 
 #############################################################
-# 14. SSM Parameter Store
+# 15. SSM Parameter Store
 #############################################################
 locals {
   static_parameters = {
@@ -461,7 +484,14 @@ locals {
     "/blackbox-${var.environment}/redis-user"     = { value = var.redis_user, type = "String" },
   }
 
-  all_ssm_parameters = merge(local.static_parameters, local.infra_parameters, local.redis_ssm_params)
+  feedback_params = {
+    "/blackbox-${var.environment}/slack-feedback-webhook-url" = { value = var.slack_feedback_webhook_url, type = "SecureString" },
+    "/blackbox-${var.environment}/jira-site-url"               = { value = var.jira_site_url, type = "String" },
+    "/blackbox-${var.environment}/jira-email"                  = { value = var.jira_email, type = "String" },
+    "/blackbox-${var.environment}/jira-api-token"               = { value = var.jira_api_token, type = "SecureString" },
+  }
+
+  all_ssm_parameters = merge(local.static_parameters, local.infra_parameters, local.redis_ssm_params, local.feedback_params)
 }
 
 resource "aws_ssm_parameter" "app_config" {

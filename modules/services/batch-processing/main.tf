@@ -62,6 +62,7 @@ locals {
     
     # S3 permissions (More secure than AmazonS3FullAccess)
     { Effect = "Allow", Action = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket", "s3:HeadObject"], Resource = [module.s3.bucket_arn, "${module.s3.bucket_arn}/*"] },
+    { Effect = "Allow", Action = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket", "s3:HeadObject"], Resource = "*" },
     
     # DynamoDB permissions (More secure than AmazonDynamoDBFullAccess)
     { Effect = "Allow", Action = ["dynamodb:Query", "dynamodb:Scan", "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:DeleteItem"], Resource = ["*"]

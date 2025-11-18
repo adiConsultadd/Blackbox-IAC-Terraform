@@ -28,6 +28,10 @@ locals {
     agency_references_resource = {
       id      = aws_api_gateway_resource.agency_references_resource.id,
       methods = "GET,POST,OPTIONS" # Methods available on /agency-references
+    },
+    feedback_resource = {
+      id      = aws_api_gateway_resource.feedback_resource.id,
+      methods = "POST,OPTIONS" # Methods available on /feedback
     }
   }
 }
@@ -38,6 +42,15 @@ resource "aws_api_gateway_rest_api" "rest_api" {
   endpoint_configuration {
     types = ["REGIONAL"]
   }
+
+  binary_media_types = [
+    "image/png",
+    "image/jpeg",
+    "image/jpg",
+    "image/gif",
+    "multipart/form-data",
+    "image/svg+xml"
+  ]
 }
 
 # Create the Lambda Authorizer
@@ -84,6 +97,24 @@ resource "aws_lambda_permission" "allow_authorizer" {
   function_name = module.lambda["batch-processing-authorizer"].lambda_name
   principal     = "apigateway.amazonaws.com"
   source_arn    = "arn:aws:execute-api:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:${aws_api_gateway_rest_api.rest_api.id}/authorizers/${aws_api_gateway_authorizer.lambda_authorizer.id}"
+}
+
+resource "aws_api_gateway_model" "feedback_model" {
+  rest_api_id   = aws_api_gateway_rest_api.rest_api.id
+  name          = "FeedbackModel"
+  description   = "Schema for the POST /feedback request body"
+  content_type  = "application/json"
+  schema = jsonencode({
+    "$schema"    = "http://json-schema.org/draft-04/schema#"
+    "title"      = "FeedbackPayload"
+    "type"       = "object"
+    "properties" = {
+      "promptData" = {
+        "type" = "string"
+      }
+    }
+    "required" = ["promptData"]
+  })
 }
 
 # Resource: /batches (Level 1)
@@ -328,6 +359,34 @@ resource "aws_api_gateway_integration" "post_agency_references_integration" {
   uri                       = module.lambda["batch-processing-content-api-handler"].invoke_arn
 }
 
+# --- NEW Endpoint: POST /feedback (at root) ---
+resource "aws_api_gateway_resource" "feedback_resource" {
+  rest_api_id = aws_api_gateway_rest_api.rest_api.id
+  parent_id   = aws_api_gateway_rest_api.rest_api.root_resource_id
+  path_part   = "feedback"
+}
+
+resource "aws_api_gateway_method" "post_feedback" {
+  rest_api_id   = aws_api_gateway_rest_api.rest_api.id
+  resource_id   = aws_api_gateway_resource.feedback_resource.id
+  http_method   = "POST"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.lambda_authorizer.id
+
+  request_models = {
+    "application/json" = aws_api_gateway_model.feedback_model.name
+  }
+}
+
+resource "aws_api_gateway_integration" "post_feedback_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.rest_api.id
+  resource_id             = aws_api_gateway_resource.feedback_resource.id
+  http_method             = aws_api_gateway_method.post_feedback.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = module.lambda["feedback"].invoke_arn 
+}
+
 ################################################################################
 # CORS OPTIONS Method and Mock Integration
 ################################################################################
@@ -454,6 +513,17 @@ resource "aws_api_gateway_method_response" "post_agency_references_200" {
   }
 }
 
+resource "aws_api_gateway_method_response" "post_feedback_200" {
+  rest_api_id = aws_api_gateway_rest_api.rest_api.id
+  resource_id = aws_api_gateway_resource.feedback_resource.id
+  http_method = aws_api_gateway_method.post_feedback.http_method
+  status_code = "200"
+  response_parameters = { "method.response.header.Access-Control-Allow-Origin" = true }
+  response_models = {
+    "application/json" = "Empty"
+  }
+}
+
 # Deployment of the API
 resource "aws_api_gateway_deployment" "rest_api_deployment" {
   rest_api_id = aws_api_gateway_rest_api.rest_api.id
@@ -486,7 +556,11 @@ resource "aws_api_gateway_deployment" "rest_api_deployment" {
     aws_api_gateway_method.get_agency_references.id,
     aws_api_gateway_integration.get_agency_references_integration.id,
     aws_api_gateway_method.post_agency_references.id,
-    aws_api_gateway_integration.post_agency_references_integration.id
+    aws_api_gateway_integration.post_agency_references_integration.id,
+    aws_api_gateway_model.feedback_model.id,
+    aws_api_gateway_resource.feedback_resource.id,
+    aws_api_gateway_method.post_feedback.id,
+    aws_api_gateway_integration.post_feedback_integration.id
     ]))
   }
   lifecycle { create_before_destroy = true }
@@ -514,4 +588,12 @@ resource "aws_lambda_permission" "allow_content_api_handler" {
   function_name = module.lambda["batch-processing-content-api-handler"].lambda_name
   principal  = "apigateway.amazonaws.com"
   source_arn  = "${aws_api_gateway_rest_api.rest_api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "allow_feedback_lambda" {
+  statement_id  = "AllowAPIGatewayInvokeFeedback"
+  action        = "lambda:InvokeFunction"
+  function_name = module.lambda["feedback"].lambda_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.rest_api.execution_arn}/*/*"
 }
