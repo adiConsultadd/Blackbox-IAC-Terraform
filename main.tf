@@ -69,6 +69,8 @@ resource "aws_iam_policy" "ec2_policy" {
         Effect   = "Allow"
         Resource = "arn:aws:lambda:${var.aws_region}:${data.aws_caller_identity.current.account_id}:function:${var.project_name}-${var.environment}-*"
       },
+      
+      # S3 Bucket Access
       {
         Action = [
           "s3:GetObject",
@@ -94,6 +96,8 @@ resource "aws_iam_policy" "ec2_policy" {
         "${module.batch_processing.s3_bucket_arn}/*"  
       ]
       },
+      
+      #SSM Access
       {
         Effect = "Allow",
         Action = [
@@ -103,6 +107,7 @@ resource "aws_iam_policy" "ec2_policy" {
         ],
         Resource = "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.current.account_id}:parameter/*"
       },
+      
       # Step Function Invoke Permissions
       { Effect = "Allow", Action = ["states:StartExecution", "states:StartSyncExecution"], Resource = ["*"] },
       {
@@ -110,6 +115,14 @@ resource "aws_iam_policy" "ec2_policy" {
         Action   = ["states:DescribeExecution", "states:GetExecutionHistory", "states:StopExecution"],
         Resource = ["*"]
       },
+      
+      #DynamoDB Access
+      { 
+        Effect = "Allow", 
+        Action = ["dynamodb:Query", "dynamodb:Scan", "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:DeleteItem", "dynamodb:DescribeTable",
+        "dynamodb:CreateTable"], 
+        Resource = ["*"]
+      }
     ]
   })
 }

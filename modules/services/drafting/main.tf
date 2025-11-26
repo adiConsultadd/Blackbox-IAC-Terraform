@@ -23,6 +23,11 @@ locals {
       Effect   = "Allow",
       Action   = ["states:DescribeExecution", "states:GetExecutionHistory", "states:StopExecution"],
       Resource = ["*"]
+    },
+    { 
+      Effect = "Allow", 
+      Action = ["dynamodb:Query", "dynamodb:Scan", "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem", "dynamodb:DeleteItem"], 
+      Resource = ["*"]
     }
   ]
 
