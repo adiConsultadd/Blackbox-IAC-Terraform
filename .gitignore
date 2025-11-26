@@ -33,3 +33,5 @@ python/
 
 *.txt
 *.sh
+
+setup-commands/
